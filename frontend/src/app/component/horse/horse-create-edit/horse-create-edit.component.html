@@ -1,0 +1,177 @@
+
+<h1 class="display-1">{{heading}}</h1>
+
+
+<form #form="ngForm" [class.was-validated]="form.submitted" (ngSubmit)="onSubmit(form)">
+  <div class="row">
+    <!-- Start name and date of birth row -->
+    <div class="mb-2 col-lg-6">
+      <!-- When nesting rows, always make row > col-* > row. The Bootstrap classes do not work right when an element is both col* and row -->
+      <div class="row">
+        <label for="horseName" class="col-form-label text-md-end text-muted col-md-2 col-lg-4">
+          Name
+        </label>
+        <div class="col-md-10 col-lg-8"
+             >
+          <input type="text"
+                 id="horseName"
+                 name="horseName"
+                 placeholder="Horse name"
+                 class="form-control"
+                 [class]="dynamicCssClassesForInput(horseNameModel)"
+                 [(ngModel)]="horse.name"
+                 #horseNameModel="ngModel"
+                 required
+                 >
+          <div class="invalid-feedback">
+            <!-- This is shown, when the form validation deems the name input to be invalid -->
+            Name is required
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="mb-2 col-lg-6">
+      <div class="row">
+        <label for="horseDateOfBirth" class="col-form-label text-md-end text-muted col-md-2 col-lg-4">
+          Date of Birth
+        </label>
+        <div class="col-md-10 col-lg-8"
+             >
+          <!-- pattern and placeholder are fallbacks for browser, that use a simple text input for type="date"
+               The date format of the plain HTML date input, in browser that support it is, sadly, not changeable in a cross-browser way
+            -->
+          <input type="date"
+                 id="horseDateOfBirth"
+                 name="horseDateOfBirth"
+                 pattern="\d{4}-\d{2}-\d{2}"
+                 placeholder="yyyy-mm-dd"
+                 class="form-control"
+                 [class]="dynamicCssClassesForInput(horseDateOfBirthModel)"
+                 [(ngModel)]="dateOfBirth"
+                 #horseDateOfBirthModel="ngModel"
+                 required
+                 >
+          <div class="invalid-feedback">
+            Date of birth is required
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- End name and date of birth row -->
+  </div>
+
+  <div class="row">
+    <!-- Start sex row -->
+    <div class="mb-2 col-lg-6">
+      <div class="row">
+        <label for="horseSex" class="col-form-label text-md-end text-muted col-md-2 col-lg-4">
+          Sex
+        </label>
+        <div class="col-md-10 col-lg-8"
+             >
+          <select class="form-select"
+                  id="horseSex"
+                  name="horseSex"
+                  [(ngModel)]="horse.sex"
+                  required
+                  >
+            <option value="FEMALE">Female</option>
+            <option value="MALE">Male</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-2 col-lg-6">
+      <div class="row">
+        <label for="horseBreed" class="col-form-label text-md-end text-muted col-md-2 col-lg-4">
+          Breed
+        </label>
+        <div class="col-md-10 col-lg-8"
+        >
+          <app-autocomplete
+            id="horseBreed"
+            name="horseBreed"
+            class="col-md-10 col-lg-8"
+            textInputClass="form-control"
+            valueNeedsToMatchSuggestion="true"
+            [(ngModel)]="horse.breed"
+            [formatModel]="formatBreedName"
+            [suggestions]="breedSuggestions"
+            required
+            ></app-autocomplete>
+        </div>
+        <!-- \TEMPLATE EXLCUDE BEGIN\ -->
+        <ng-template #breedDetail>
+          <span class="col-form-label col-md-10 col-lg-8">{{horse.breed?.name}}</span>
+        </ng-template>
+        <!-- \TEMPLATE EXLCUDE END\ -->
+      </div>
+    </div>
+    <!-- End sex row -->
+  </div>
+
+  <div class="row">
+    <!-- Start height and weight row -->
+    <div class="mb-2 col-lg-6">
+      <div class="row"><label for="horseHeight" class="col-form-label text-md-end text-muted col-md-2 col-lg-4">
+          Height [m]
+        </label>
+        <div class="col-md-10 col-lg-8"
+             >
+          <input type="number" class="form-control"
+                 id="horseHeight"
+                 name="horseHeight"
+                 step="0.01"
+                 [(ngModel)]="height"
+                 required
+                 >
+        </div>
+        <!-- \TEMPLATE EXLCUDE BEGIN\ -->
+        <ng-template #heightDetail>
+          <span class="col-form-label col-md-10 col-lg-8">{{horse.height}}</span>
+        </ng-template>
+        <!-- \TEMPLATE EXLCUDE END\ -->
+      </div>
+    </div>
+    <div class="mb-2 col-lg-6">
+      <div class="row"><label for="horseWeight" class="col-form-label text-md-end text-muted col-md-2 col-lg-4">
+          Weight [kg]
+        </label>
+        <div class="col-md-10 col-lg-8"
+             >
+          <input type="number" class="form-control"
+                 id="horseWeight"
+                 name="horseWeight"
+                 step="1"
+                 [(ngModel)]="weight"
+                 required
+                 >
+        </div>
+        <!-- \TEMPLATE EXLCUDE BEGIN\ -->
+        <ng-template #weightDetail>
+          <span class="col-form-label col-md-10 col-lg-8">{{horse.weight}}</span>
+        </ng-template>
+        <!-- \TEMPLATE EXLCUDE END\ -->
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4 d-flex flex-row">
+    <button type="button"
+            class="btn btn-danger"
+            *ngIf="!modeIsCreate"
+            >
+      <i class="bi bi-trash"></i>
+      Delete
+    </button>
+    <span class="flex-grow-1"></span>
+    <button type="submit"
+            class="btn btn-primary"
+            [disabled]="!form.valid"
+            type="submit"
+            >
+      {{submitButtonText}}
+    </button>
+  </div>
+</form>

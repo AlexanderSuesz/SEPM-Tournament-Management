@@ -1,0 +1,142 @@
+<!-- SANITY CHECK BANNER
+    This is just for checking, that your setup works.
+    You can – and should – remove this later
+    -->
+<div class="container mt-3 mb-3" *ngIf="bannerError">
+  <div class="alert alert-danger" role="alert">
+    <h4>Error!</h4> {{ bannerError }}
+    <p>Could not load horses.</p>
+    <p>Something is not quite right. Did you start the backend?</p>
+  </div>
+</div>
+
+<div class="container mt-3" *ngIf="!bannerError && horses">
+  <div class="alert alert-success" role="alert">
+    <h4 class="alert-heading">Well done!</h4>
+    <p>Your application is up and running.</p>
+    <p>You should see the current list of horses below.</p>
+  </div>
+</div>
+<!-- END SANITY CHECK BANNER -->
+
+<div class="d-flex flex-row w-auto">
+  <button class="btn btn-primary mr-1" (click)="reloadHorses()" aria-label="Reload horses">
+    <i class="bi bi-arrow-clockwise"></i>
+    Reload
+  </button>
+  <span style="flex: 1"></span>
+  <a class="btn btn-secondary" routerLink="create" aria-label="New horse">
+    <i class="bi bi-plus-lg"></i>
+    New horse
+  </a>
+</div>
+
+<form class="d-flex flex-row w-auto mb-3" (submit)="reloadHorses()">
+  <!-- this button is here, just so that simple submitting of this form
+       to reload the horses, is possible -->
+  <button type="submit" hidden="hidden">submit</button>
+  <div class="flex-grow-1">
+    <label for="searchHorseName" class="col-form-label">
+      Name
+    </label>
+    <input type="text" id="searchHorseName" name="searchHorseName"
+           class="form-control"
+           [(ngModel)]="searchParams.name"
+           (ngModelChange)="searchChanged()"
+           >
+  </div>
+  <div class="ms-1">
+    <label for="searchHorseSex" class="col-form-label">
+      Sex
+    </label>
+    <select id="searchHorseSex" name="searchHorseSex"
+            class="form-select"
+            [(ngModel)]="searchParams.sex"
+            (ngModelChange)="searchChanged()"
+    >
+      <option></option>
+      <option value="FEMALE">Female</option>
+      <option value="MALE">Male</option>
+    </select>
+  </div>
+  <div class="ms-1">
+    <label for="searchHorseBornEarliest" class="col-form-label">
+      Earliest Date Of Birth
+    </label>
+    <!-- pattern and placeholder are fallbacks for browser, that use a simple text input for type="date"
+         The date format of the plain HTML date input, in browser that support it is, sadly, not changeable in a cross-browser way
+      -->
+    <input type="date" id="searchHorseBornEarliest" name="searchHorseBornEarliest"
+           pattern="\d{4}-\d{2}-\d{2}"
+           placeholder="yyyy-mm-dd"
+           class="form-control"
+           [(ngModel)]="searchBornEarliest"
+           (ngModelChange)="searchChanged()"
+           >
+  </div>
+  <div class="ms-1">
+    <label for="searchHorseBornLatest" class="col-form-label">
+      Latest Date Of Birth
+    </label>
+    <!-- pattern and placeholder are fallbacks for browser, that use a simple text input for type="date"
+         The date format of the plain HTML date input, in browser that support it is, sadly, not changeable in a cross-browser way
+      -->
+    <input type="date" id="searchHorseBornLatest" name="searchHorseBornLatest"
+           pattern="\d{4}-\d{2}-\d{2}"
+           placeholder="yyyy-mm-dd"
+           class="form-control"
+           [(ngModel)]="searchBornLatest"
+           (ngModelChange)="searchChanged()"
+           >
+  </div>
+  <div class="ms-1 flex-grow-1">
+    <label for="searchHorseBreed" class="col-form-label">
+      Breed
+    </label>
+    <app-autocomplete
+      textInputClass="form-control"
+      id="searchHorseBreed" name="searchHorseBreed"
+      [suggestions]="breedSuggestions"
+      [formatModel]="formatBreedName"
+      [(ngModel)]="searchParams.breedName"
+      (ngModelChange)="searchChanged()"
+      valueNeedsToMatchSuggestion="false"
+      >
+    </app-autocomplete>
+  </div>
+</form>
+
+<div class="mt-3">
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Sex</th>
+        <th>Date of Birth</th>
+        <th>Breed</th>
+        <th class="min-width">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let horse of horses" class="center-td">
+        <td>{{horse.name}}</td>
+        <td>{{horse.sex === 'FEMALE' ? 'Female' : 'Male'}}</td>
+        <td>{{horse.dateOfBirth.toLocaleDateString()}}</td>
+        <td>{{horse.breed?.name ?? ""}}</td>
+        <td>
+          <div class="btn-group">
+            <a class="btn btn-sm responsive-info-button"
+               aria-label="Show horse details">
+              <i class="bi bi-info-lg"></i>
+            </a>
+            <a class="btn btn-sm responsive-warning-button"
+               [routerLink]="['edit', horse.id]"
+               aria-label="Edit horse">
+              <i class="bi bi-pencil"></i>
+            </a>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

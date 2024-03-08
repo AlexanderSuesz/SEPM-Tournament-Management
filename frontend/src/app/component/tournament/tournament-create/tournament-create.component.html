@@ -1,0 +1,133 @@
+<h1 class="display-1 mb-4">Create Tournament</h1>
+
+<form #form="ngForm" [class.was-validated]="form.submitted" (submit)="submit(form)">
+  <div class="w-auto mb-3">
+    <div class="row">
+      <!-- Begin Tournament name row -->
+      <div class="mb-2 col-lg-6">
+        <div class="row">
+          <label for="tournamentName" class="col-form-label text-md-end text-muted col-md-2 col-lg-3">
+            Name
+          </label>
+          <div class="col-md-10 col-lg-9">
+            <input type="text"
+                   id="tournamentName" name="tournamentName"
+                   placeholder="Tournament Name"
+                   class="form-control" [class]="dynamicCssClassesForInput(nameModel)"
+                   #nameModel="ngModel"
+                   [(ngModel)]="tournament.name"
+                   required>
+            <div class="invalid-feedback">
+              <!-- This is shown, when the form validation deems the name input to be invalid -->
+              Name is required
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- End Tournament name row -->
+    </div>
+
+    <div class="row">
+      <!-- Begin Tournament dates row -->
+      <div class="mb-2 col-lg-6">
+        <div class="row">
+          <label for="tournamentStartDate" class="col-form-label text-md-end text-muted col-md-2 col-lg-3">
+            Start Date
+          </label>
+          <div class="col-md-10 col-lg-9">
+            <!-- pattern and placeholder are fallbacks for browser, that use a simple text input for type="date"
+                 The date format of the plain HTML date input, in browser that support it is, sadly, not changeable in a cross-browser way
+              -->
+            <input type="date"
+                   id="tournamentStartDate" name="tournamentStartDate"
+                   pattern="\d{4}-\d{2}-\d{2}"
+                   placeholder="yyyy-mm-dd"
+                   class="form-control"
+                   [class]="dynamicCssClassesForInput(startDateModel)"
+                   #startDateModel="ngModel"
+                   [(ngModel)]="startDate"
+                   required>
+            <div class="invalid-feedback">
+              <!-- This is shown, when the form validation deems the name input to be invalid -->
+              Start Date is required
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mb-2 col-lg-6">
+        <div class="row">
+          <label for="tournamentEndDate" class="col-form-label text-md-end text-muted col-md-2 col-lg-3">
+            End Date
+          </label>
+          <div class="col-md-10 col-lg-9">
+            <!-- pattern and placeholder are fallbacks for browser, that use a simple text input for type="date"
+                 The date format of the plain HTML date input, in browser that support it is, sadly, not changeable in a cross-browser way
+              -->
+            <input type="date"
+                   id="tournamentEndDate" name="tournamentEndDate"
+                   pattern="\d{4}-\d{2}-\d{2}"
+                   placeholder="yyyy-mm-dd"
+                   class="form-control"
+                   [ngClass]="dynamicCssClassesForInput(endDateModel)"
+                   [(ngModel)]="endDate"
+                   #endDateModel="ngModel"
+                   required>
+            <div class="invalid-feedback">
+              <!-- This is shown, when the form validation deems the name input to be invalid -->
+              End Date is required
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div>
+    <h2>Participant Horses</h2>
+    <!-- Begin horse selection block -->
+    <div class="row">
+      <div class="col-lg-6 mb-2">
+        <app-autocomplete
+          name="tournamentParticipantSelection"
+          textInputClass="form-control"
+          [suggestions]="horseSuggestions"
+          [formatModel]="formatHorse"
+          valueNeedsToMatchSuggestion="true"
+          [(ngModel)]="dummyHorseSelectionModel"
+          (ngModelChange)="addHorse($event)"
+        >
+        </app-autocomplete>
+      </div>
+
+      <div class="col-lg-6">
+        <table class="table align-baseline">
+          <tbody>
+          <tr *ngFor="let participant of participants; index as i">
+            <td>{{i}}:</td>
+            <td>{{formatHorse(participant)}}</td>
+            <td class="min-width">
+              <!-- Make button just hidden, when no participant is present, to keep layout correct -->
+              <button type="button"
+                      class="btn btn-light ms-2"
+                      (click)="removeHorse(i)"
+                      [style.visibility]="participant ? 'visible' : 'hidden'">
+                <i class="bi-trash"></i>
+              </button>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-end">
+    <button type="submit"
+            class="btn btn-primary"
+            [disabled]="!form.valid"
+            >
+      Create
+    </button>
+  </div>
+</form>

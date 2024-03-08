@@ -1,0 +1,31 @@
+<div class="d-flex flex-row pt-1 pb-1"
+     [class.align-items-end]="isUpperHalf"
+     [class.align-items-start]="isLowerHalf"
+     [class.align-items-center]="isFinalWinner">
+
+  <div class="d-flex flex-column me-3" *ngIf="treeBranch?.branches">
+    <!-- Earlier round(s) -->
+    <div class="pt-3">
+      <app-tournament-standings-branch
+        [branchPosition]="TournamentBranchPosition.UPPER"
+        [treeBranch]="treeBranch?.branches?.[0]"
+        [allParticipants]="allParticipants"
+        ></app-tournament-standings-branch>
+    </div>
+    <div class="pb-3">
+      <app-tournament-standings-branch
+        [branchPosition]="TournamentBranchPosition.LOWER"
+        [treeBranch]="treeBranch?.branches?.[1]"
+        [allParticipants]="allParticipants"
+        ></app-tournament-standings-branch>
+    </div>
+  </div>
+
+  <app-autocomplete
+    textInputClass="form-control"
+    valueNeedsToMatchSuggestion="true"
+    [suggestions]="suggestions"
+    [(ngModel)]="treeBranch.thisParticipant"
+    [formatModel]="formatParticipant"
+    ></app-autocomplete>
+</div>
