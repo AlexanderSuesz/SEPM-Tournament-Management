@@ -42,6 +42,10 @@ public class HorseJdbcDao implements HorseDao {
           + TABLE_NAME
           + " (name, sex, date_of_birth, height, weight, breed_id, id) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
+  private static String SQL_INSERT_WITHOUT_BREED = "INSERT INTO "
+          + TABLE_NAME
+          + " (name, sex, date_of_birth, height, weight, id) VALUES (?, ?, ?, ?, ?, ?)";
+
   private static final String SQL_UPDATE = "UPDATE " + TABLE_NAME
       + " SET name = ?"
       + "  , sex = ?"
@@ -82,24 +86,43 @@ public class HorseJdbcDao implements HorseDao {
   @Override
   public Horse add(HorseDetailDto horse) {
     LOG.trace("add({})", horse);
-    jdbcTemplate.update(SQL_INSERT,
-            horse.name(),
-            horse.sex().toString(),
-            horse.dateOfBirth(),
-            horse.height(),
-            horse.weight(),
-            horse.breed().id(),
-            horse.id());
+    if (horse.breed() == null) {
+      jdbcTemplate.update(SQL_INSERT_WITHOUT_BREED,
+              horse.name(),
+              horse.sex().toString(),
+              horse.dateOfBirth(),
+              horse.height(),
+              horse.weight(),
+              horse.id());
 
-    return new Horse()
-            .setId(horse.id())
-            .setName(horse.name())
-            .setSex(horse.sex())
-            .setDateOfBirth(horse.dateOfBirth())
-            .setHeight(horse.height())
-            .setWeight(horse.weight())
-            .setBreedId(horse.breed().id())
-            ;
+      return new Horse()
+              .setName(horse.name())
+              .setSex(horse.sex())
+              .setDateOfBirth(horse.dateOfBirth())
+              .setHeight(horse.height())
+              .setWeight(horse.weight())
+              .setId(horse.id())
+              ;
+    } else {
+      jdbcTemplate.update(SQL_INSERT,
+              horse.name(),
+              horse.sex().toString(),
+              horse.dateOfBirth(),
+              horse.height(),
+              horse.weight(),
+              horse.breed().id(),
+              horse.id());
+
+      return new Horse()
+              .setId(horse.id())
+              .setName(horse.name())
+              .setSex(horse.sex())
+              .setDateOfBirth(horse.dateOfBirth())
+              .setHeight(horse.height())
+              .setWeight(horse.weight())
+              .setBreedId(horse.breed().id())
+              ;
+    }
   }
 
   @Override
