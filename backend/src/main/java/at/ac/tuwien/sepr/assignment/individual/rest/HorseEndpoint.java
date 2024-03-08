@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -51,6 +52,12 @@ public class HorseEndpoint {
     }
   }
 
+  @PostMapping
+  public HorseDetailDto add(@RequestBody HorseDetailDto toAdd) throws ValidationException {
+    LOG.info("POST " + BASE_PATH + "/create", toAdd);
+    LOG.debug("Body of request:\n{}", toAdd);
+    return service.add(toAdd);
+  }
 
   @PutMapping("{id}")
   public HorseDetailDto update(@PathVariable("id") long id, @RequestBody HorseDetailDto toUpdate) throws ValidationException, ConflictException {

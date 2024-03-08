@@ -76,6 +76,11 @@ public class HorseJdbcDao implements HorseDao {
   }
 
   @Override
+  public Horse add(HorseDetailDto horse) {
+    return null;
+  }
+
+  @Override
   public Collection<Horse> search(HorseSearchDto searchParameters) {
     LOG.trace("search({})", searchParameters);
     var query = SQL_SELECT_SEARCH;

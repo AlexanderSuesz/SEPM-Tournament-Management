@@ -44,4 +44,13 @@ public interface HorseService {
    * @throws NotFoundException if the horse with the given ID does not exist in the persistent data store
    */
   HorseDetailDto getById(long id) throws NotFoundException;
+
+  /**
+   * Adds the horse in the persistent data store.
+   *
+   * @param horse the horse to add
+   * @return he updated horse
+   * @throws ValidationException if the data of the new horse is in itself incorrect (no name, name too long …)
+   */
+  HorseDetailDto add(HorseDetailDto horse) throws ValidationException;
 }
