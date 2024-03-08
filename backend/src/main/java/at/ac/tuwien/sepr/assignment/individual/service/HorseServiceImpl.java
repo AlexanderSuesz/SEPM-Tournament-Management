@@ -102,7 +102,6 @@ public class HorseServiceImpl implements HorseService {
     validator.validateForUpdate(horseWithID);
     LOG.info("now adding to db: {}", horseWithID);
     var newlyAddedHorse = dao.add(horseWithID);
-    var breeds = breedMapForSingleHorse(newlyAddedHorse);
-    return mapper.entityToDetailDto(newlyAddedHorse, breeds);
+    return horseWithID;
   }
 }

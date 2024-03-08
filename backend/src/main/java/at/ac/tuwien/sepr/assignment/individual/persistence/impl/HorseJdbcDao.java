@@ -38,6 +38,10 @@ public class HorseJdbcDao implements HorseDao {
 
   private static final String SQL_LIMIT_CLAUSE = " LIMIT :limit";
 
+  private static String SQL_INSERT = "INSERT INTO "
+          + TABLE_NAME
+          + " (name, sex, date_of_birth, height, weight, breed_id, id) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
   private static final String SQL_UPDATE = "UPDATE " + TABLE_NAME
       + " SET name = ?"
       + "  , sex = ?"
@@ -77,7 +81,25 @@ public class HorseJdbcDao implements HorseDao {
 
   @Override
   public Horse add(HorseDetailDto horse) {
-    return null;
+    LOG.trace("add({})", horse);
+    jdbcTemplate.update(SQL_INSERT,
+            horse.name(),
+            horse.sex().toString(),
+            horse.dateOfBirth(),
+            horse.height(),
+            horse.weight(),
+            horse.breed().id(),
+            horse.id());
+
+    return new Horse()
+            .setId(horse.id())
+            .setName(horse.name())
+            .setSex(horse.sex())
+            .setDateOfBirth(horse.dateOfBirth())
+            .setHeight(horse.height())
+            .setWeight(horse.weight())
+            .setBreedId(horse.breed().id())
+            ;
   }
 
   @Override
