@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Logging ###
+*.log
+*.log.*.gz
+
+### Database Files ###
+*.db
