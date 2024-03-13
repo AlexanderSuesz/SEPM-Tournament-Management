@@ -71,4 +71,18 @@ export class HorseComponent implements OnInit {
 
   formatBreedName = (name: string) => name; // It is already the breed name, we just have to give a function to the component
 
+  public onDelete(horseId: number): void {
+    let observable: Observable<Horse> = this.service.deleteById(horseId);
+    observable.subscribe({
+      next: data => {
+        this.notification.success(`Horse ${horseId} successfully deleted.`);
+        this.reloadHorses();
+      },
+      error: error => {
+        console.error('Error deleting horse', error);
+        // TODO show an error message to the user. Include and sensibly present the info from the backend!
+      }
+    });
+  }
+
 }
