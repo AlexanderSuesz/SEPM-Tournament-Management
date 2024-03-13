@@ -10,6 +10,10 @@ import at.ac.tuwien.sepr.assignment.individual.exception.NotFoundException;
 import at.ac.tuwien.sepr.assignment.individual.exception.ValidationException;
 import at.ac.tuwien.sepr.assignment.individual.mapper.HorseMapper;
 import at.ac.tuwien.sepr.assignment.individual.persistence.HorseDao;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
 import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.Map;
@@ -18,9 +22,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 @Service
 public class HorseServiceImpl implements HorseService {
@@ -77,7 +78,6 @@ public class HorseServiceImpl implements HorseService {
   }
 
 
-
   private Map<Long, BreedDto> breedMapForHorses(Set<Long> horse) {
     return breedService.findBreedsByIds(horse)
         .collect(Collectors.toUnmodifiableMap(BreedDto::id, Function.identity()));
@@ -90,18 +90,24 @@ public class HorseServiceImpl implements HorseService {
     var horses = dao.search(new HorseSearchDto(null, null, null, null, null, null));
     // Select the larges id…
     var ids = horses.stream()
-            .map(Horse::getId);
-    LOG.info("All found ids are: {}", ids);
+        .map(Horse::getId);
     var largestId = ids
-            .filter(Objects::nonNull)
-            .reduce(Math::min); // ids are starting from negative numbers: -1, -2, -3, ...
+        .filter(Objects::nonNull)
+        .reduce(Math::min); // ids are starting from negative numbers: -1, -2, -3, ...
     LOG.info("The largest id is: {}", largestId);
     long newId = largestId.isEmpty() ? -1 : largestId.get() - 1;
-    HorseDetailDto horseWithID = new HorseDetailDto(newId, horse.name(), horse.sex(), horse.dateOfBirth(), horse.height(), horse.weight(), horse.breed());
+    HorseDetailDto newlyAddedHorse = new HorseDetailDto(newId, horse.name(), horse.sex(), horse.dateOfBirth(), horse.height(), horse.weight(), horse.breed());
     // … then get the breeds all at once.
-    validator.validateForUpdate(horseWithID);
-    LOG.info("now adding to db: {}", horseWithID);
-    var newlyAddedHorse = dao.add(horseWithID);
-    return horseWithID;
+    validator.validateForUpdate(newlyAddedHorse);
+    LOG.info("now adding to db: {}", newlyAddedHorse);
+    return newlyAddedHorse;
+  }
+
+  @Override
+  public HorseDetailDto deleteById(long id) throws NotFoundException {
+    LOG.trace("delete({})", id);
+    Horse deletedHorse = dao.deleteById(id);
+    var breeds = breedMapForSingleHorse(deletedHorse);
+    return mapper.entityToDetailDto(deletedHorse, breeds);
   }
 }

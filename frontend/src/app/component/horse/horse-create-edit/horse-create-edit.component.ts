@@ -30,6 +30,7 @@ export class HorseCreateEditComponent implements OnInit {
     height: 0, // TODO this is bad
     weight: 0, // TODO this is bad
   };
+  horseID: number = 42;
 
   private heightSet: boolean = false;
   private weightSet: boolean = false;
@@ -136,6 +137,7 @@ export class HorseCreateEditComponent implements OnInit {
           this.heightSet = true;
           this.weightSet = true;
           this.dateOfBirthSet = true;
+          this.horseID = Number(url[1]);
           },
           error: error => {
             console.error('Error fetching horses', error);
@@ -147,8 +149,6 @@ export class HorseCreateEditComponent implements OnInit {
           }
         });
       })
-
-      if (this.mode == HorseCreateEditMode.edit) this.horse.name = "Hubert";
     }
   }
 
@@ -188,6 +188,22 @@ export class HorseCreateEditComponent implements OnInit {
         },
         error: error => {
           console.error('Error editing horse', error);
+          // TODO show an error message to the user. Include and sensibly present the info from the backend!
+        }
+      });
+    }
+  }
+
+  public onDelete(): void {
+    if (this.mode == HorseCreateEditMode.edit) {
+      let observable: Observable<Horse> = this.service.deleteById(this.horseID);
+      observable.subscribe({
+        next: data => {
+          this.notification.success(`Horse ${this.horse.name} successfully deleted.`);
+          this.router.navigate(['/horses']);
+        },
+        error: error => {
+          console.error('Error deleting horse', error);
           // TODO show an error message to the user. Include and sensibly present the info from the backend!
         }
       });

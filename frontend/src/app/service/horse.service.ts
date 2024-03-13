@@ -21,6 +21,10 @@ export class HorseService {
     return this.http.get<Horse>(`${baseUri}/${id}`);
   }
 
+  deleteById(id: number): Observable<Horse> {
+    return this.http.delete<Horse>(`${baseUri}/${id}`);
+  }
+
   search(searchParams: HorseSearch): Observable<HorseListDto[]> {
     if (searchParams.name === '') {
       delete searchParams.name;
