@@ -61,7 +61,7 @@ public class HorseEndpoint {
 
   @PutMapping("{id}")
   public HorseDetailDto update(@PathVariable("id") long id, @RequestBody HorseDetailDto toUpdate) throws ValidationException, ConflictException {
-    LOG.info("PUT " + BASE_PATH + "/{}", toUpdate);
+    LOG.info("PUT " + BASE_PATH + "/edit/{}", toUpdate);
     LOG.debug("Body of request:\n{}", toUpdate);
     try {
       return service.update(toUpdate.withId(id));
