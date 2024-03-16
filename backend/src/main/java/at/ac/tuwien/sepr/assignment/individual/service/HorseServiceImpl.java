@@ -23,6 +23,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Service class providing operations related to horse entities.
+ * This class implements the HorseService interface.
+ */
 @Service
 public class HorseServiceImpl implements HorseService {
   private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
