@@ -73,11 +73,22 @@ public class HorseServiceImpl implements HorseService {
     return mapper.entityToDetailDto(horse, breeds);
   }
 
+  /**
+   * Retrieves breed information for a single horse based on its breed ID.
+   *
+   * @param horse the horse for which breed information is to be retrieved
+   * @return a map containing breed information for the specified horse
+   */
   private Map<Long, BreedDto> breedMapForSingleHorse(Horse horse) {
     return breedMapForHorses(Collections.singleton(horse.getBreedId()));
   }
 
-
+  /**
+   * Retrieves breed information for multiple horses based on their breed IDs.
+   *
+   * @param horse a set containing the IDs of horses for which breed information is to be retrieved
+   * @return a map containing breed information for the specified horses
+   */
   private Map<Long, BreedDto> breedMapForHorses(Set<Long> horse) {
     return breedService.findBreedsByIds(horse)
         .collect(Collectors.toUnmodifiableMap(BreedDto::id, Function.identity()));
@@ -96,11 +107,13 @@ public class HorseServiceImpl implements HorseService {
         .reduce(Math::min); // ids are starting from negative numbers: -1, -2, -3, ...
     LOG.info("The largest id is: {}", largestId);
     long newId = largestId.isEmpty() ? -1 : largestId.get() - 1;
-    HorseDetailDto newlyAddedHorse = new HorseDetailDto(newId, horse.name(), horse.sex(), horse.dateOfBirth(), horse.height(), horse.weight(), horse.breed());
+    HorseDetailDto horseToAddDto = new HorseDetailDto(newId, horse.name(), horse.sex(), horse.dateOfBirth(), horse.height(), horse.weight(), horse.breed());
     // … then get the breeds all at once.
-    validator.validateForUpdate(newlyAddedHorse);
-    LOG.info("now adding to db: {}", newlyAddedHorse);
-    return newlyAddedHorse;
+    validator.validateForUpdate(horseToAddDto);
+    LOG.info("now adding to db: {}", horseToAddDto);
+    Horse newlyAddedHorse = dao.add(horseToAddDto);
+    var breeds = breedMapForSingleHorse(newlyAddedHorse);
+    return mapper.entityToDetailDto(newlyAddedHorse, breeds);
   }
 
   @Override
