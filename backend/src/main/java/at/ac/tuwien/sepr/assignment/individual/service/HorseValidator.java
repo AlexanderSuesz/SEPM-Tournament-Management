@@ -39,4 +39,20 @@ public class HorseValidator {
     }
   }
 
+  /**
+   * Validates the provided horse details before performing an insert operation (adding a new horse to the persistence storage).
+   *
+   * @param horse the horse details to validate
+   * @throws ValidationException if validation fails due to invalid data
+   */
+  public void validateForInsert(HorseDetailDto horse) throws ValidationException {
+    LOG.trace("validateForUpdate({})", horse);
+    List<String> validationErrors = new ArrayList<>();
+
+    // TODO this is not complete…
+
+    if (!validationErrors.isEmpty()) {
+      throw new ValidationException("Validation of horse for update failed", validationErrors);
+    }
+  }
 }

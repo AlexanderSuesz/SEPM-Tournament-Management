@@ -102,20 +102,9 @@ public class HorseServiceImpl implements HorseService {
   public HorseDetailDto add(HorseDetailDto horse) throws ValidationException {
     LOG.trace("add({})", horse);
     LOG.info("add({})", horse);
-    var horses = dao.search(new HorseSearchDto(null, null, null, null, null, null));
-    // Select the larges id…
-    var ids = horses.stream()
-        .map(Horse::getId);
-    var largestId = ids
-        .filter(Objects::nonNull)
-        .reduce(Math::min); // ids are starting from negative numbers: -1, -2, -3, ...
-    LOG.info("The largest id is: {}", largestId);
-    long newId = largestId.isEmpty() ? -1 : largestId.get() - 1;
-    HorseDetailDto horseToAddDto = new HorseDetailDto(newId, horse.name(), horse.sex(), horse.dateOfBirth(), horse.height(), horse.weight(), horse.breed());
-    // … then get the breeds all at once.
-    validator.validateForUpdate(horseToAddDto);
-    LOG.info("now adding to db: {}", horseToAddDto);
-    Horse newlyAddedHorse = dao.add(horseToAddDto);
+    validator.validateForInsert(horse);
+    LOG.info("now adding to db: {}", horse);
+    Horse newlyAddedHorse = dao.add(horse);
     var breeds = breedMapForSingleHorse(newlyAddedHorse);
     return mapper.entityToDetailDto(newlyAddedHorse, breeds);
   }
