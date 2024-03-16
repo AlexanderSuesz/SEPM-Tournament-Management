@@ -31,10 +31,20 @@ public abstract class ErrorListException extends Exception {
         .formatted(messageSummary, errorListDescriptor, String.join(", ", errors));
   }
 
+  /**
+   * Retrieves the message summary.
+   *
+   * @return the message summary
+   */
   public String summary() {
     return messageSummary;
   }
 
+  /**
+   * Retrieves an unmodifiable list of errors.
+   *
+   * @return an unmodifiable list of errors
+   */
   public List<String> errors() {
     return Collections.unmodifiableList(errors);
   }

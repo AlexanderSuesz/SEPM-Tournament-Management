@@ -23,6 +23,10 @@ import org.springframework.web.server.ResponseStatusException;
 import java.lang.invoke.MethodHandles;
 import java.util.stream.Stream;
 
+/**
+ * REST controller for handling requests related to horses.
+ * Provides endpoints for searching, adding, updating, and deleting horses.
+ */
 @RestController
 @RequestMapping(path = HorseEndpoint.BASE_PATH)
 public class HorseEndpoint {
@@ -35,6 +39,12 @@ public class HorseEndpoint {
     this.service = service;
   }
 
+  /**
+   * Handles HTTP GET requests to search for horses based on the provided search parameters.
+   *
+   * @param searchParameters the search parameters for filtering horses
+   * @return a stream of HorseListDto objects representing the searched horses
+   */
   @GetMapping
   public Stream<HorseListDto> searchHorses(HorseSearchDto searchParameters) {
     LOG.info("GET " + BASE_PATH);
@@ -42,6 +52,12 @@ public class HorseEndpoint {
     return service.search(searchParameters);
   }
 
+  /**
+   * Handles HTTP GET requests to retrieve details of a specific horse by its ID.
+   *
+   * @param id the ID of the horse to retrieve
+   * @return a HorseDetailDto representing the details of the requested horse
+   */
   @GetMapping("{id}")
   public HorseDetailDto getById(@PathVariable("id") long id) {
     LOG.info("GET " + BASE_PATH + "/{}", id);
@@ -54,6 +70,14 @@ public class HorseEndpoint {
     }
   }
 
+
+  /**
+   * Handles HTTP POST requests to add a new horse.
+   *
+   * @param toAdd the HorseDetailDto containing the details of the horse to add
+   * @return a HorseDetailDto representing the details of the added horse
+   * @throws ValidationException if the provided data for the new horse is invalid
+   */
   @PostMapping
   public HorseDetailDto add(@RequestBody HorseDetailDto toAdd) throws ValidationException {
     LOG.info("POST " + BASE_PATH + "/create", toAdd);
@@ -61,6 +85,15 @@ public class HorseEndpoint {
     return service.add(toAdd);
   }
 
+  /**
+   * Handles HTTP PUT requests to update an existing horse.
+   *
+   * @param id       the ID of the horse to update
+   * @param toUpdate the HorseDetailDto containing the updated details of the horse
+   * @return a HorseDetailDto representing the details of the updated horse
+   * @throws ValidationException if the provided data for the updated horse is invalid
+   * @throws ConflictException   if there is a conflict while updating the horse
+   */
   @PutMapping("{id}")
   public HorseDetailDto update(@PathVariable("id") long id, @RequestBody HorseDetailDto toUpdate) throws ValidationException, ConflictException {
     LOG.info("PUT " + BASE_PATH + "/edit/{}", toUpdate);
@@ -74,6 +107,12 @@ public class HorseEndpoint {
     }
   }
 
+  /**
+   * Handles HTTP DELETE requests to delete a horse by its ID.
+   *
+   * @param id the ID of the horse to delete
+   * @return a HorseDetailDto representing the details of the deleted horse
+   */
   @DeleteMapping("{id}")
   public HorseDetailDto deleteById(@PathVariable("id") long id) {
     LOG.info("Delete " + BASE_PATH + "/{}", id);

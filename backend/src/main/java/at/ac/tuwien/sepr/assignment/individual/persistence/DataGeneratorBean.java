@@ -1,15 +1,16 @@
 package at.ac.tuwien.sepr.assignment.individual.persistence;
 
 import jakarta.annotation.PostConstruct;
-import java.lang.invoke.MethodHandles;
-import java.sql.SQLException;
-import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.stereotype.Component;
+
+import javax.sql.DataSource;
+import java.lang.invoke.MethodHandles;
+import java.sql.SQLException;
 
 /**
  * This component is only created, if the profile {@code datagen} is active
@@ -28,6 +29,11 @@ public class DataGeneratorBean {
     this.dataSource = dataSource;
   }
 
+  /**
+   * Inserts some dummy data into the database.
+   *
+   * @throws SQLException if an SQL error occurs while generating data
+   */
   @PostConstruct
   public void generateData() throws SQLException {
     LOGGER.info("Generating data…");
@@ -37,6 +43,11 @@ public class DataGeneratorBean {
     }
   }
 
+  /**
+   * Clears the dummy data from the database.
+   *
+   * @throws SQLException if an SQL error occurs while clearing data
+   */
   public void clearData() throws SQLException {
     LOGGER.info("Clearing data…");
     try (var connection = dataSource.getConnection()) {

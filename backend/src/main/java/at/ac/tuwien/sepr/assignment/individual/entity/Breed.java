@@ -1,5 +1,8 @@
 package at.ac.tuwien.sepr.assignment.individual.entity;
 
+/**
+ * Represents a breed in the persistent data store.
+ */
 public class Breed {
   private long id;
   private String name;

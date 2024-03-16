@@ -3,18 +3,23 @@ package at.ac.tuwien.sepr.assignment.individual.persistence.impl;
 import at.ac.tuwien.sepr.assignment.individual.dto.BreedSearchDto;
 import at.ac.tuwien.sepr.assignment.individual.entity.Breed;
 import at.ac.tuwien.sepr.assignment.individual.persistence.BreedDao;
-import java.lang.invoke.MethodHandles;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.lang.invoke.MethodHandles;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Provides access functionality to the application's persistent data store regarding breeds.
+ * This implementation utilizes JDBC for database access.
+ */
 @Repository
 public class BreedJdbcDao implements BreedDao {
   private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -56,10 +61,18 @@ public class BreedJdbcDao implements BreedDao {
     return jdbcTemplate.query(query, new BeanPropertySqlParameterSource(searchParams), this::mapRow);
   }
 
-  private Breed mapRow(ResultSet resultSet, int i) throws SQLException {
+  /**
+   * Maps a row from the {@link ResultSet} to a Breed object.
+   *
+   * @param result the {@link ResultSet} containing the row data
+   * @param rownum the row number
+   * @return a Horse object mapped from the {@link ResultSet} row
+   * @throws SQLException if an SQL error occurs while mapping the row
+   */
+  private Breed mapRow(ResultSet result, int rownum) throws SQLException {
     return new Breed()
-        .setId(resultSet.getLong("id"))
-        .setName(resultSet.getString("name"))
+        .setId(result.getLong("id"))
+        .setName(result.getString("name"))
         ;
   }
 }

@@ -5,6 +5,11 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import org.springframework.web.filter.OncePerRequestFilter;
+
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.text.DecimalFormat;
@@ -13,10 +18,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
-import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
  * ServletFilter to log every request.
@@ -24,14 +25,20 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class LogFilter extends OncePerRequestFilter {
   private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-  private static final  DecimalFormat REQUEST_RUNTIME_FORMAT = new DecimalFormat("#.###", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
+  private static final DecimalFormat REQUEST_RUNTIME_FORMAT = new DecimalFormat("#.###", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
   private static final Long NANOSECONDS_PER_MS = 1000_000L;
   private static final List<String> MUTED_PATHS = Arrays.asList(
       "/swagger-ui/",
       "/swagger.yaml"
   );
 
-
+  /**
+   * Filters the HTTP request and response and writes logs accordingly.
+   *
+   * @param request     the HTTP servlet request
+   * @param response    the HTTP servlet response
+   * @param filterChain the filter chain
+   */
   @Override
   public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) {
     var runtime = -1L;
@@ -57,6 +64,11 @@ public class LogFilter extends OncePerRequestFilter {
     }
   }
 
+  /**
+   * Logs information before processing the request.
+   *
+   * @param request the HTTP servlet request
+   */
   private void beforeRequest(HttpServletRequest request) {
     var b = getUrlString(">>> ", request);
     var agent = request.getHeader("User-Agent");
@@ -66,6 +78,13 @@ public class LogFilter extends OncePerRequestFilter {
     logWithRightCategory(200, b.toString());
   }
 
+  /**
+   * Logs information after processing the request and response.
+   *
+   * @param request  the HTTP servlet request
+   * @param response the HTTP servlet response
+   * @param runtime  the duration of the request processing in nanoseconds
+   */
   private void afterRequest(HttpServletRequest request, HttpServletResponse response, Long runtime) {
     var b = getUrlString("<<< ", request);
     var logStatus = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
@@ -82,6 +101,11 @@ public class LogFilter extends OncePerRequestFilter {
     logWithRightCategory(logStatus, b.toString());
   }
 
+  /**
+   * Populates the Mapped Diagnostic Context (MDC) with information about the request.
+   *
+   * @param request the HTTP servlet request
+   */
   private void populateMDC(HttpServletRequest request) {
     var forwarded = request.getHeader("X-Forwarded-For");
     //ip of client
@@ -96,12 +120,24 @@ public class LogFilter extends OncePerRequestFilter {
     MDC.put("http_request_ua", request.getHeader("User-Agent"));
   }
 
+  /**
+   * Generates a random UUID to be used as a correlation ID.
+   *
+   * @return a randomly generated UUID
+   */
   private String generateRequestId() {
     var uuid = UUID.randomUUID().toString();
     uuid = uuid.substring(uuid.lastIndexOf("-") + 1);
     return uuid;
   }
 
+  /**
+   * Constructs a StringBuilder containing the URL string.
+   *
+   * @param prefix  the prefix to prepend to the URL string
+   * @param request the HTTP servlet request
+   * @return a StringBuilder containing the URL string
+   */
   private StringBuilder getUrlString(String prefix, HttpServletRequest request) {
     var b = new StringBuilder(prefix)
         .append(request.getMethod())
@@ -114,6 +150,12 @@ public class LogFilter extends OncePerRequestFilter {
     return b;
   }
 
+  /**
+   * Checks if the request should be logged.
+   *
+   * @param request the HTTP servlet request
+   * @return true if the request should be logged, false otherwise
+   */
   private boolean shouldLog(HttpServletRequest request) {
     //Log everything in TRACE
     if (LOG.isTraceEnabled()) {
@@ -125,6 +167,12 @@ public class LogFilter extends OncePerRequestFilter {
     return MUTED_PATHS.stream().noneMatch(url::startsWith);
   }
 
+  /**
+   * Logs the message according to the given status code.
+   *
+   * @param status the status code
+   * @param logMsg the message to be logged
+   */
   private void logWithRightCategory(int status, String logMsg) {
     var x = status / 100;
     switch (x) {

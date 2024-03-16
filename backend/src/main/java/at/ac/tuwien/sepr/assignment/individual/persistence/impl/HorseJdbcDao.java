@@ -21,6 +21,10 @@ import java.sql.Types;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * Provides access functionality to the application's persistent data store regarding horses.
+ * This implementation utilizes JDBC for database access.
+ */
 @Repository
 public class HorseJdbcDao implements HorseDao {
   private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -170,6 +174,7 @@ public class HorseJdbcDao implements HorseDao {
     if (updated == 0) {
       throw new NotFoundException("Could not update horse with ID " + horse.id() + ", because it does not exist");
     }
+    //TODO: check for ConflictException regarding breed not found in db.
 
     return new Horse()
         .setId(horse.id())
@@ -182,7 +187,14 @@ public class HorseJdbcDao implements HorseDao {
         ;
   }
 
-
+  /**
+   * Maps a row from the {@link ResultSet} to a Horse object.
+   *
+   * @param result the {@link ResultSet} containing the row data
+   * @param rownum the row number
+   * @return a Horse object mapped from the {@link ResultSet} row
+   * @throws SQLException if an SQL error occurs while mapping the row
+   */
   private Horse mapRow(ResultSet result, int rownum) throws SQLException {
     return new Horse()
         .setId(result.getLong("id"))
