@@ -43,8 +43,9 @@ public class HorseServiceImpl implements HorseService {
   }
 
   @Override
-  public Stream<HorseListDto> search(HorseSearchDto searchParameters) {
+  public Stream<HorseListDto> search(HorseSearchDto searchParameters) throws ValidationException {
     LOG.info("search({})", searchParameters);
+    validator.validateForSearch(searchParameters);
     var horses = dao.search(searchParameters);
     // First get all breed ids…
     var breeds = horses.stream()

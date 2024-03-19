@@ -19,8 +19,9 @@ public interface HorseService {
    *
    * @param searchParameters the search parameters to use in filtering.
    * @return the horses where the given fields match.
+   * @throws ValidationException if the search data is in itself incorrect (name too long, born Earliest > born Latest …)
    */
-  Stream<HorseListDto> search(HorseSearchDto searchParameters);
+  Stream<HorseListDto> search(HorseSearchDto searchParameters) throws ValidationException;
 
   /**
    * Updates the horse with the ID given in {@code horse}

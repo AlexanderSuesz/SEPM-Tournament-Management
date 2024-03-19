@@ -44,9 +44,10 @@ public class HorseEndpoint {
    *
    * @param searchParameters the search parameters for filtering horses
    * @return a stream of HorseListDto objects representing the searched horses
+   * @throws ValidationException if the search data is invalid
    */
   @GetMapping
-  public Stream<HorseListDto> searchHorses(HorseSearchDto searchParameters) {
+  public Stream<HorseListDto> searchHorses(HorseSearchDto searchParameters) throws ValidationException {
     LOG.info("GET " + BASE_PATH);
     LOG.debug("request parameters: {}", searchParameters);
     return service.search(searchParameters);
