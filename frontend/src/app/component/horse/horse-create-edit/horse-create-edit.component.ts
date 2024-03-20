@@ -8,6 +8,7 @@ import {Sex} from 'src/app/dto/sex';
 import {HorseService} from 'src/app/service/horse.service';
 import {Breed} from "../../../dto/breed";
 import {BreedService} from "../../../service/breed.service";
+import {ErrorFormatterService} from '../../../service/error-formatter.service'
 
 
 export enum HorseCreateEditMode {
@@ -35,6 +36,16 @@ export class HorseCreateEditComponent implements OnInit {
   private heightSet: boolean = false;
   private weightSet: boolean = false;
   private dateOfBirthSet: boolean = false;
+
+  constructor(
+    private service: HorseService,
+    private breedService: BreedService,
+    private router: Router,
+    private route: ActivatedRoute,
+    private notification: ToastrService,
+    private errorFormater: ErrorFormatterService,
+  ) {
+  }
 
   get height(): number | null {
     return this.heightSet
@@ -67,16 +78,6 @@ export class HorseCreateEditComponent implements OnInit {
   set dateOfBirth(value: Date) {
     this.dateOfBirthSet = true;
     this.horse.dateOfBirth = value;
-  }
-
-
-  constructor(
-    private service: HorseService,
-    private breedService: BreedService,
-    private router: Router,
-    private route: ActivatedRoute,
-    private notification: ToastrService,
-  ) {
   }
 
   public get heading(): string {
@@ -141,11 +142,7 @@ export class HorseCreateEditComponent implements OnInit {
           },
           error: error => {
             console.error('Error fetching horses', error);
-            //this.bannerError = 'Could not fetch horses: ' + error.message;
-            const errorMessage = error.status === 0
-              ? 'Is the backend up?'
-              : error.message.message;
-            this.notification.error(errorMessage, 'Could Not Fetch Horses');
+            this.displayErrorMessageOnScreen(error)
           }
         });
       })
@@ -188,7 +185,7 @@ export class HorseCreateEditComponent implements OnInit {
         },
         error: error => {
           console.error('Error editing horse', error);
-          // TODO show an error message to the user. Include and sensibly present the info from the backend!
+          this.displayErrorMessageOnScreen(error)
         }
       });
     }
@@ -204,10 +201,18 @@ export class HorseCreateEditComponent implements OnInit {
         },
         error: error => {
           console.error('Error deleting horse', error);
-          // TODO show an error message to the user. Include and sensibly present the info from the backend!
+          this.displayErrorMessageOnScreen(error)
         }
       });
     }
   }
 
+  private displayErrorMessageOnScreen(error: any): void {
+    if (error.status === 0){
+      this.notification.error("Couldn't load server data"); // If the backend isn't up.
+    }
+    else {
+      this.notification.error(this.errorFormater.format(error), 'Error', {enableHtml: true});
+    }
+  }
 }

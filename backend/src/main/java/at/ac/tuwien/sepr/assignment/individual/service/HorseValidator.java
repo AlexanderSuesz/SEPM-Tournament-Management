@@ -41,7 +41,7 @@ public class HorseValidator {
     validationErrors.addAll(validateWeight(horse.weight()));
     {
       if (!validationErrors.isEmpty()) {
-        throw new ValidationException("Validation of horse for update failed", validationErrors);
+        throw new ValidationException("Validation of horse to update failed", validationErrors);
       }
     }
   }
@@ -63,7 +63,7 @@ public class HorseValidator {
     validationErrors.addAll(validateHeight(horse.height()));
     validationErrors.addAll(validateWeight(horse.weight()));
     if (!validationErrors.isEmpty()) {
-      throw new ValidationException("Validation of horse for update failed", validationErrors);
+      throw new ValidationException("Validation of horse to add failed", validationErrors);
     }
   }
 
@@ -84,7 +84,7 @@ public class HorseValidator {
       validationErrors.add("Earliest date of birth needs to be before latest date of birth");
     }
     if (!validationErrors.isEmpty()) {
-      throw new ValidationException("Validation of horse for update failed", validationErrors);
+      throw new ValidationException("Validation of search parameters failed", validationErrors);
     }
   }
 

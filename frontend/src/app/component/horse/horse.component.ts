@@ -5,6 +5,7 @@ import {Horse, HorseListDto} from '../../dto/horse';
 import {HorseSearch} from '../../dto/horse';
 import {debounceTime, map, Observable, of, Subject} from 'rxjs';
 import {BreedService} from "../../service/breed.service";
+import {ErrorFormatterService} from '../../service/error-formatter.service'
 
 @Component({
   selector: 'app-horse',
@@ -25,7 +26,8 @@ export class HorseComponent implements OnInit {
     private service: HorseService,
     private breedService: BreedService,
     private notification: ToastrService,
-  ) { }
+    private errorFormater: ErrorFormatterService,
+) { }
 
   ngOnInit(): void {
     this.reloadHorses();
@@ -53,10 +55,7 @@ export class HorseComponent implements OnInit {
         error: error => {
           console.error('Error fetching horses', error);
           this.bannerError = 'Could not fetch horses: ' + error.message;
-          const errorMessage = error.status === 0
-            ? 'Is the backend up?'
-            : error.message.message;
-          this.notification.error(errorMessage, 'Could Not Fetch Horses');
+          this.displayErrorMessageOnScreen(error)
         }
       });
   }
@@ -80,9 +79,18 @@ export class HorseComponent implements OnInit {
       },
       error: error => {
         console.error('Error deleting horse', error);
-        // TODO show an error message to the user. Include and sensibly present the info from the backend!
+        this.displayErrorMessageOnScreen(error)
       }
     });
+  }
+
+  private displayErrorMessageOnScreen(error: any): void {
+    if (error.status === 0){
+      this.notification.error("Couldn't load server data"); // If the backend isn't up.
+    }
+    else {
+      this.notification.error(this.errorFormater.format(error), 'Error', {enableHtml: true});
+    }
   }
 
 }
