@@ -41,10 +41,8 @@ public class HorseValidator {
     validationErrors.addAll(validateSex(horse.sex()));
     validationErrors.addAll(validateHeight(horse.height()));
     validationErrors.addAll(validateWeight(horse.weight()));
-    {
-      if (!validationErrors.isEmpty()) {
-        throw new ValidationException("Validation of horse to update failed", validationErrors);
-      }
+    if (!validationErrors.isEmpty()) {
+      throw new ValidationException("Validation of horse to update failed", validationErrors);
     }
   }
 
@@ -93,13 +91,11 @@ public class HorseValidator {
 
   private List<String> validateBreed(String breed) {
     List<String> validationErrors = new ArrayList<>();
-    if (breed == null){
+    if (breed == null) {
       validationErrors.add("Name of the horse breed is too short"); // can't check for the rest if is null
-    }
-    else if (breed.length() > 100) {
+    } else if (breed.length() > 100) {
       validationErrors.add("Name of the horse breed is too long");
-    }
-    else if (breed.length() <= 0) {
+    } else if (breed.length() <= 0) {
       validationErrors.add("Name of the horse breed is too short");
     }
     return validationErrors;
@@ -108,13 +104,11 @@ public class HorseValidator {
   private List<String> validateName(String name) {
     List<String> validationErrors = new ArrayList<>();
     if (name == null) {
-      validationErrors.add("Horse name is too short");// can't check for the rest if is null
+      validationErrors.add("Horse name is too short"); // can't check for the rest if is null
       return validationErrors;
-    }
-    else if (name.length() <= 0) {
+    } else if (name.length() <= 0) {
       validationErrors.add("Horse name is too short");
-    }
-    else if (name.length() > 100) {
+    } else if (name.length() > 100) {
       validationErrors.add("Horse name is too long");
     }
     return validationErrors;
@@ -124,8 +118,7 @@ public class HorseValidator {
     List<String> validationErrors = new ArrayList<>();
     if (height > 3) {
       validationErrors.add("Horse height is too large");
-    }
-    else if (height <= 0) {
+    } else if (height <= 0) {
       validationErrors.add("Horse height is too small");
     }
     return validationErrors;
@@ -135,8 +128,7 @@ public class HorseValidator {
     List<String> validationErrors = new ArrayList<>();
     if (weight > 2000) {
       validationErrors.add("Horse weight is too big");
-    }
-    else if (weight <= 0) {
+    } else if (weight <= 0) {
       validationErrors.add("Horse weight is too small");
     }
     return validationErrors;
@@ -149,6 +141,7 @@ public class HorseValidator {
     }
     return validationErrors;
   }
+
   private List<String> validateBirthdateNotInFuture(LocalDate date) {
     List<String> validationErrors = new ArrayList<>();
     if (date == null || date.isAfter(LocalDate.now()) || date.isEqual(LocalDate.now())) {

@@ -3,6 +3,7 @@ package at.ac.tuwien.sepr.assignment.individual.persistence;
 import at.ac.tuwien.sepr.assignment.individual.dto.HorseDetailDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.HorseSearchDto;
 import at.ac.tuwien.sepr.assignment.individual.entity.Horse;
+import at.ac.tuwien.sepr.assignment.individual.exception.ConflictException;
 import at.ac.tuwien.sepr.assignment.individual.exception.NotFoundException;
 
 import java.util.Collection;
@@ -32,8 +33,9 @@ public interface HorseDao {
    * @param horse the horse to update
    * @return the updated horse
    * @throws NotFoundException if the Horse with the given ID does not exist in the persistent data store
+   * @throws ConflictException if the breed of the horse with the given ID was not found in the persistent data store
    */
-  Horse update(HorseDetailDto horse) throws NotFoundException;
+  Horse update(HorseDetailDto horse) throws NotFoundException, ConflictException;
 
   /**
    * Get a horse by its ID from the persistent data store.

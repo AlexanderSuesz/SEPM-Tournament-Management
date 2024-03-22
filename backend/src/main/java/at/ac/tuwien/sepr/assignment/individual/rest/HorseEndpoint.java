@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -80,6 +81,7 @@ public class HorseEndpoint {
    * @throws ValidationException if the provided data for the new horse is invalid
    */
   @PostMapping
+  @ResponseStatus(HttpStatus.CREATED)
   public HorseDetailDto add(@RequestBody HorseDetailDto toAdd) throws ValidationException {
     LOG.info("POST " + BASE_PATH);
     LOG.debug("Body of request:\n{}", toAdd);
@@ -104,6 +106,10 @@ public class HorseEndpoint {
     } catch (NotFoundException e) {
       HttpStatus status = HttpStatus.NOT_FOUND;
       logClientError(status, "Horse to update not found", e);
+      throw new ResponseStatusException(status, e.getMessage(), e);
+    } catch (ConflictException e) {
+      HttpStatus status = HttpStatus.CONFLICT;
+      logClientError(status, "There was a conflict when updating a horse's data", e);
       throw new ResponseStatusException(status, e.getMessage(), e);
     }
   }
