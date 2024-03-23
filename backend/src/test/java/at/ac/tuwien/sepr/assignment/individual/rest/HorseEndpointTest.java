@@ -1,17 +1,10 @@
 package at.ac.tuwien.sepr.assignment.individual.rest;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import at.ac.tuwien.sepr.assignment.individual.TestBase;
+import at.ac.tuwien.sepr.assignment.individual.dto.HorseDetailDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.HorseListDto;
 import at.ac.tuwien.sepr.assignment.individual.type.Sex;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +17,16 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ActiveProfiles({"test", "datagen"}) // enable "test" spring profile during test execution in order to pick up configuration from application-test.yml
 @SpringBootTest
@@ -41,6 +44,98 @@ public class HorseEndpointTest extends TestBase {
   @BeforeEach
   public void setup() {
     this.mockMvc = MockMvcBuilders.webAppContextSetup(webAppContext).build();
+  }
+
+  @Test
+  public void deleteHorseWithExistingIdReturns200() throws Exception {
+    int existingID = -1; // All horses in the test data have negative id.
+    var body = mockMvc
+        .perform(MockMvcRequestBuilders
+            .delete("/horses/" + existingID))
+        .andExpect(status().isOk()) // checks for 200 response code
+        .andReturn().getResponse().getContentAsByteArray();
+    assertThat(body).hasSize(0); // should not have response body
+  }
+
+  @Test
+  public void deleteHorseWithNotExistingIdReturns404() throws Exception {
+    int notExistingID = 1; // All horses in the test data have negative id.
+    var body = mockMvc
+        .perform(MockMvcRequestBuilders
+            .delete("/horses/" + notExistingID))
+        .andExpect(status().isNotFound()) // checks for 404 response code
+        .andReturn().getResponse().getContentAsByteArray();
+    assertThat(body).hasSize(0); // should not have response body
+  }
+
+  @Test
+  public void postHorseWithValidDataWithoutBreedReturnsHorseWithoutBreed() throws Exception {
+
+    String requestBody = objectMapper.writeValueAsString(Map.of(
+        "name", "Umbrella",
+        "sex", "FEMALE",
+        "dateOfBirth", LocalDate.of(2017, 3, 5).toString(),
+        "height", 1,
+        "weight", 1
+    ));
+    // Perform the POST request with the JSON body
+    var body = mockMvc
+        .perform(MockMvcRequestBuilders
+            .post("/horses")
+            .contentType(MediaType.APPLICATION_JSON)  // Set content type to JSON
+            .content(requestBody)  // Set the request body
+            .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isCreated())  // Ensure the response status is Created (201)
+        .andReturn().getResponse().getContentAsByteArray();
+
+    // Process the response body
+    var horsesResult = objectMapper.readerFor(HorseDetailDto.class)
+        .<HorseDetailDto>readValues(body);
+
+    // Assert that the result is not null and process it further
+    assertNotNull(horsesResult);
+    var horses = new ArrayList<HorseDetailDto>();
+    horsesResult.forEachRemaining(horses::add);
+
+    assertThat(horses).isNotEmpty();
+    assertThat(horses)
+        .hasSize(1)
+        .extracting(
+            HorseDetailDto::id,
+            HorseDetailDto::name,
+            HorseDetailDto::sex,
+            HorseDetailDto::dateOfBirth,
+            (h) -> h.breed() != null ? h.breed().name() : null, // Handle null breed case
+            HorseDetailDto::height,
+            HorseDetailDto::weight
+        )
+        .satisfies(tuple -> {
+          assertThat(tuple).isNotNull();
+        })
+        .containsOnly(// a newly added horse will have the ID 1, since all test data has negative IDs.
+            tuple(1L, "Umbrella", Sex.FEMALE, LocalDate.of(2017, 3, 5), null, (float) 1, (float) 1)
+        );
+  }
+
+  @Test
+  public void putHorseWithNonExistingIdReturns404() throws Exception {
+    int notExistingId = 1; // All horses in the test data have negative id.
+    String requestBody = objectMapper.writeValueAsString(Map.of(
+        "id", notExistingId,
+        "name", "Umbrella",
+        "sex", "FEMALE",
+        "dateOfBirth", LocalDate.of(2017, 3, 5).toString(),
+        "height", 1,
+        "weight", 1
+    ));
+    // Perform the POST request with the JSON body
+    mockMvc
+        .perform(MockMvcRequestBuilders
+            .put("/horses/" + notExistingId)
+            .contentType(MediaType.APPLICATION_JSON)  // Set content type to JSON
+            .content(requestBody)  // Set the request body
+            .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNotFound());  // Ensure the response status is Created (404)
   }
 
   @Test
