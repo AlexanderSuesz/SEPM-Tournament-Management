@@ -34,6 +34,31 @@ public class HorseServiceTest extends TestBase {
   HorseService horseService;
 
   @Test
+  void deleteWhenGivenNotExistingIdShouldThrow() {
+    int notExistingId = 1; // All horses in the test data have negative id.
+    assertThrows(AssertionFailedError.class, () -> {
+      try {
+        horseService.deleteById(notExistingId);
+      } catch (NotFoundException e) {
+        fail("NotFoundException occurred: " + e.getMessage());
+      }
+    });
+  }
+
+  @Test
+  void deleteWhenGivenExistingIdReturnVoid() {
+    int existingId = -1; // All horses in the test data have negative id.
+    assertDoesNotThrow(() -> {
+      try {
+        horseService.deleteById(existingId);
+      } catch (NotFoundException e) {
+        fail("NotFoundException occurred: " + e.getMessage());
+      }
+    });
+  }
+
+
+  @Test
   void addWhenGivenInvalidHeightShouldThrow() {
     // Adds a horse with invalid height
     HorseDetailDto horse = new HorseDetailDto(null, "A Horse", Sex.FEMALE, LocalDate.of(2018, 8, 19), -1, 2, null);
