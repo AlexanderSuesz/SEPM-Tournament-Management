@@ -118,13 +118,12 @@ public class HorseEndpoint {
    * Handles HTTP DELETE requests to delete a horse by its ID.
    *
    * @param id the ID of the horse to delete
-   * @return a HorseDetailDto representing the details of the deleted horse
    */
   @DeleteMapping("{id}")
-  public HorseDetailDto deleteById(@PathVariable("id") long id) {
+  public void deleteById(@PathVariable("id") long id) {
     LOG.info("Delete " + BASE_PATH + "/{}", id);
     try {
-      return service.deleteById(id);
+      service.deleteById(id);
     } catch (NotFoundException e) {
       HttpStatus status = HttpStatus.NOT_FOUND;
       logClientError(status, "Horse to delete not found", e);

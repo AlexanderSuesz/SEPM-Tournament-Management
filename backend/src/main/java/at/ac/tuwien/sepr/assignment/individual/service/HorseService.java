@@ -60,8 +60,7 @@ public interface HorseService {
    * Deletes the horse with given ID.
    *
    * @param id the ID of the horse to delete
-   * @return the horse with ID {@code id}
    * @throws NotFoundException if the horse with the given ID does not exist in the persistent data store
    */
-  HorseDetailDto deleteById(long id) throws NotFoundException;
+  void deleteById(long id) throws NotFoundException;
 }

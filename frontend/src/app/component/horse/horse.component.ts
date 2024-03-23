@@ -71,10 +71,21 @@ export class HorseComponent implements OnInit {
   formatBreedName = (name: string) => name; // It is already the breed name, we just have to give a function to the component
 
   public onDelete(horseId: number): void {
+    let horse: Horse;
+    // retrieves the horse with the given id to display the name of the deleted horse in a notification. 
+    this.service.getById(horseId).subscribe({
+      next: data => {
+        horse = data;
+      },
+      error: error => {
+        console.error('Error fetching horses', error);
+        this.displayErrorMessageOnScreen(error)
+      }
+    });
     let observable: Observable<Horse> = this.service.deleteById(horseId);
     observable.subscribe({
       next: data => {
-        this.notification.success(`Horse ${horseId} successfully deleted.`);
+        this.notification.success(`Horse ${horse.name} successfully deleted.`);
         this.reloadHorses();
       },
       error: error => {

@@ -111,10 +111,8 @@ public class HorseServiceImpl implements HorseService {
   }
 
   @Override
-  public HorseDetailDto deleteById(long id) throws NotFoundException {
+  public void deleteById(long id) throws NotFoundException {
     LOG.trace("delete({})", id);
-    Horse deletedHorse = dao.deleteById(id);
-    var breeds = breedMapForSingleHorse(deletedHorse);
-    return mapper.entityToDetailDto(deletedHorse, breeds);
+    dao.deleteById(id);
   }
 }
