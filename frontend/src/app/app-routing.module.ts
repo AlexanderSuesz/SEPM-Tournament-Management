@@ -11,6 +11,7 @@ const routes: Routes = [
     {path: '', component: HorseComponent},
     {path: 'create', component: HorseCreateEditComponent, data: {mode: HorseCreateEditMode.create}},
     {path: 'edit/:id', component: HorseCreateEditComponent, data: {mode: HorseCreateEditMode.edit}},
+    {path: 'detail/:id', component: HorseCreateEditComponent, data: {mode: HorseCreateEditMode.info}},
   ]},
   {path: 'tournaments', children: [
     {path: 'create', component: TournamentCreateComponent},

@@ -14,6 +14,7 @@ import {ErrorFormatterService} from '../../../service/error-formatter.service'
 export enum HorseCreateEditMode {
   create,
   edit,
+  info
 }
 
 @Component({
@@ -22,14 +23,14 @@ export enum HorseCreateEditMode {
   styleUrls: ['./horse-create-edit.component.scss']
 })
 export class HorseCreateEditComponent implements OnInit {
-
+  inputsDisabled: Boolean = false; // Inputs will be enabled for all views except the details view.
   mode: HorseCreateEditMode = HorseCreateEditMode.create;
   horse: Horse = {
     name: '',
     sex: Sex.female,
-    dateOfBirth: new Date(), // TODO this is bad
-    height: 0, // TODO this is bad
-    weight: 0, // TODO this is bad
+    dateOfBirth: new Date(),
+    height: 0,
+    weight: 0,
   };
   horseID: number = 42;
 
@@ -86,6 +87,8 @@ export class HorseCreateEditComponent implements OnInit {
         return 'Create New Horse';
       case HorseCreateEditMode.edit:
         return 'Edit Horse: ' + this.horse.name;
+      case HorseCreateEditMode.info:
+        return 'Details about Horse: ' + this.horse.name;
       default:
         return '?';
     }
@@ -97,6 +100,8 @@ export class HorseCreateEditComponent implements OnInit {
         return 'Create';
       case HorseCreateEditMode.edit:
         return 'Edit';
+      case HorseCreateEditMode.info:
+        return 'Change to Edit View'
       default:
         return '?';
     }
@@ -121,6 +126,7 @@ export class HorseCreateEditComponent implements OnInit {
         return 'created';
       case HorseCreateEditMode.edit:
         return 'edited';
+        // Method won't be called in details view
       default:
         return '?';
     }
@@ -129,8 +135,14 @@ export class HorseCreateEditComponent implements OnInit {
   ngOnInit(): void {
     this.route.data.subscribe(extractedMode => {
       this.mode = extractedMode.mode;
+      if (this.mode == HorseCreateEditMode.info){
+        this.inputsDisabled = true;
+      }
+      else {
+        this.inputsDisabled = false;
+      }
     });
-    if (this.mode == HorseCreateEditMode.edit){
+    if (this.mode == HorseCreateEditMode.edit || this.mode == HorseCreateEditMode.info){
       this.route.url.subscribe(url =>{
         this.service.getById(Number(url[1])).subscribe({
           next: data => {
@@ -164,6 +176,9 @@ export class HorseCreateEditComponent implements OnInit {
     :  this.breedService.breedsByName(input, 5);
 
   public onSubmit(form: NgForm): void {
+    if (this.mode == HorseCreateEditMode.info){ // When in details mode, the submit button will instead directly lead to the edit page.
+      this.router.navigate(['/horses/edit/'+this.horseID]); // In the details mode we want to directly change to the edit mode
+    }
     console.log('is form valid?', form.valid, this.horse);
     if (form.valid) {
       let observable: Observable<Horse>;
@@ -192,7 +207,7 @@ export class HorseCreateEditComponent implements OnInit {
   }
 
   public onDelete(): void {
-    if (this.mode == HorseCreateEditMode.edit) {
+    if (this.mode == HorseCreateEditMode.edit || this.mode == HorseCreateEditMode.info) {
       let observable: Observable<Horse> = this.service.deleteById(this.horseID);
       observable.subscribe({
         next: data => {

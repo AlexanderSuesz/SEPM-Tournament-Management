@@ -15,7 +15,6 @@ import {ErrorFormatterService} from '../../service/error-formatter.service'
 export class HorseComponent implements OnInit {
   search = false;
   horses: HorseListDto[] = [];
-  bannerError: string | null = null;
   searchParams: HorseSearch = {};
   searchBornEarliest: string | null = null;
   searchBornLatest: string | null = null;
@@ -54,7 +53,6 @@ export class HorseComponent implements OnInit {
         },
         error: error => {
           console.error('Error fetching horses', error);
-          this.bannerError = 'Could not fetch horses: ' + error.message;
           this.displayErrorMessageOnScreen(error)
         }
       });

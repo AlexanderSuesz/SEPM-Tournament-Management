@@ -18,6 +18,7 @@
                  name="horseName"
                  placeholder="Horse name"
                  class="form-control"
+                 [disabled]="inputsDisabled"
                  [class]="dynamicCssClassesForInput(horseNameModel)"
                  [(ngModel)]="horse.name"
                  #horseNameModel="ngModel"
@@ -46,6 +47,7 @@
                  pattern="\d{4}-\d{2}-\d{2}"
                  placeholder="yyyy-mm-dd"
                  class="form-control"
+                 [disabled]="inputsDisabled"
                  [class]="dynamicCssClassesForInput(horseDateOfBirthModel)"
                  [(ngModel)]="dateOfBirth"
                  #horseDateOfBirthModel="ngModel"
@@ -69,7 +71,8 @@
         </label>
         <div class="col-md-10 col-lg-8"
              >
-          <select class="form-select"
+          <!-- In the edit and create view we want to display the select button for the sex-->
+          <select *ngIf="!inputsDisabled" class="form-select"
                   id="horseSex"
                   name="horseSex"
                   [(ngModel)]="horse.sex"
@@ -78,6 +81,13 @@
             <option value="FEMALE">Female</option>
             <option value="MALE">Male</option>
           </select>
+          <!-- If we are in the details view we just want to display the sex without a selection button-->
+          <input *ngIf="inputsDisabled" type="text" class="form-control"
+                 id="horseSex"
+                 name="horseSex"
+                 [disabled]="inputsDisabled"
+                 [value]="horse.sex === 'FEMALE' ? 'Female' : 'Male'"
+                 >
         </div>
       </div>
     </div>
@@ -95,6 +105,7 @@
             class="col-md-10 col-lg-8"
             textInputClass="form-control"
             valueNeedsToMatchSuggestion="true"
+            [disabled]="inputsDisabled"
             [(ngModel)]="horse.breed"
             [formatModel]="formatBreedName"
             [suggestions]="breedSuggestions"
@@ -118,10 +129,14 @@
         </label>
         <div class="col-md-10 col-lg-8"
              >
-          <input type="number" class="form-control"
+          <!-- The type of the input will be 'text' if we are in the details view and thereby disabled the inputs.
+          If the type is text, then there is no selection bar which makes readability easier for the user -->
+          <input [type]="inputsDisabled ? 'text' : 'number'"
+                 class="form-control"
                  id="horseHeight"
                  name="horseHeight"
                  step="0.01"
+                 [disabled]="inputsDisabled"
                  [(ngModel)]="height"
                  required
                  >
@@ -139,10 +154,14 @@
         </label>
         <div class="col-md-10 col-lg-8"
              >
-          <input type="number" class="form-control"
+          <!-- The type of the input will be 'text' if we are in the details view and thereby disabled the inputs.
+          If the type is text, then there is no selection bar which makes readability easier for the user -->
+          <input [type]="inputsDisabled ? 'text' : 'number'"
+                 class="form-control"
                  id="horseWeight"
                  name="horseWeight"
                  step="1"
+                 [disabled]="inputsDisabled"
                  [(ngModel)]="weight"
                  required
                  >
@@ -168,7 +187,7 @@
     <span class="flex-grow-1"></span>
     <button type="submit"
             class="btn btn-primary"
-            [disabled]="!form.valid"
+            [disabled]="!form.valid && !inputsDisabled"
             type="submit"
             >
       {{submitButtonText}}
