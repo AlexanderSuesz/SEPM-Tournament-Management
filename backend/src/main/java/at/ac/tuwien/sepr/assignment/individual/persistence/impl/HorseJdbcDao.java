@@ -3,8 +3,10 @@ package at.ac.tuwien.sepr.assignment.individual.persistence.impl;
 import at.ac.tuwien.sepr.assignment.individual.dto.HorseDetailDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.HorseSearchDto;
 import at.ac.tuwien.sepr.assignment.individual.entity.Horse;
+import at.ac.tuwien.sepr.assignment.individual.exception.ConflictException;
 import at.ac.tuwien.sepr.assignment.individual.exception.FatalException;
 import at.ac.tuwien.sepr.assignment.individual.exception.NotFoundException;
+import at.ac.tuwien.sepr.assignment.individual.persistence.BreedDao;
 import at.ac.tuwien.sepr.assignment.individual.persistence.HorseDao;
 import at.ac.tuwien.sepr.assignment.individual.type.Sex;
 import org.slf4j.Logger;
@@ -12,13 +14,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.lang.invoke.MethodHandles;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Types;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -43,7 +51,7 @@ public class HorseJdbcDao implements HorseDao {
 
   private static final String SQL_LIMIT_CLAUSE = " LIMIT :limit";
 
-  private static String SQL_INSERT = "INSERT INTO "
+  private static String SQL_INSERT_WITH_BREED = "INSERT INTO "
       + TABLE_NAME
       + " (name, sex, date_of_birth, height, weight, breed_id) VALUES (?, ?, ?, ?, ?, ?)";
 
@@ -51,7 +59,7 @@ public class HorseJdbcDao implements HorseDao {
       + TABLE_NAME
       + " (name, sex, date_of_birth, height, weight) VALUES (?, ?, ?, ?, ?)";
 
-  private static final String SQL_UPDATE = "UPDATE " + TABLE_NAME
+  private static final String SQL_UPDATE_WITH_BREED = "UPDATE " + TABLE_NAME
       + " SET name = ?"
       + "  , sex = ?"
       + "  , date_of_birth = ?"
@@ -60,18 +68,29 @@ public class HorseJdbcDao implements HorseDao {
       + "  , breed_id = ?"
       + " WHERE id = ?";
 
+  private static final String SQL_UPDATE_WITHOUT_BREED = "UPDATE " + TABLE_NAME
+      + " SET name = ?"
+      + "  , sex = ?"
+      + "  , date_of_birth = ?"
+      + "  , height = ?"
+      + "  , weight = ?"
+      + " WHERE id = ?";
+
   private static final String SQL_DELETE_BY_ID = "DELETE FROM " + TABLE_NAME
       + " WHERE id = ?";
 
   private final JdbcTemplate jdbcTemplate;
   private final NamedParameterJdbcTemplate jdbcNamed;
+  private final BreedDao breedDao;
 
 
   public HorseJdbcDao(
       NamedParameterJdbcTemplate jdbcNamed,
-      JdbcTemplate jdbcTemplate) {
+      JdbcTemplate jdbcTemplate,
+      BreedDao breedDao) {
     this.jdbcTemplate = jdbcTemplate;
     this.jdbcNamed = jdbcNamed;
+    this.breedDao = breedDao; // Necessary for checking for ConflictException when using update method
   }
 
   @Override
@@ -80,13 +99,13 @@ public class HorseJdbcDao implements HorseDao {
     List<Horse> horses;
     horses = jdbcTemplate.query(SQL_SELECT_BY_ID, this::mapRow, id);
     if (horses.isEmpty()) {
-      throw new NotFoundException("No horse with ID %d found".formatted(id));
+      LOG.warn("No horse with ID %d found".formatted(id));
+      throw new NotFoundException("Horse not found");
     }
     if (horses.size() > 1) {
       // This should never happen!!
       throw new FatalException("Too many horses with ID %d found".formatted(id));
     }
-
     return horses.get(0);
   }
 
@@ -95,39 +114,32 @@ public class HorseJdbcDao implements HorseDao {
     LOG.trace("add({})", horse);
     int addedCount;
     Horse addedHorse;
+    KeyHolder keyHolder = new GeneratedKeyHolder(); // Will contain the key (id) of the newly added horse.
+    //TODO: Should I add try-catch blocks for DataAccessExceptions since this can be thrown when accessing the database?
     if (horse.breed() == null) {
-      addedCount = jdbcTemplate.update(SQL_INSERT_WITHOUT_BREED,
-          horse.name(),
-          horse.sex().toString(),
-          horse.dateOfBirth(),
-          horse.height(),
-          horse.weight());
+      addedCount = jdbcTemplate.update(con -> {
+        PreparedStatement ps = con.prepareStatement(SQL_INSERT_WITHOUT_BREED, Statement.RETURN_GENERATED_KEYS);
+        ps.setString(1, horse.name());
+        ps.setString(2, horse.sex().toString());
+        ps.setObject(3, horse.dateOfBirth());
+        ps.setFloat(4, horse.height());
+        ps.setFloat(5, horse.weight());
+        return ps;
+      }, keyHolder);
 
-      addedHorse = new Horse()
-          .setName(horse.name())
-          .setSex(horse.sex())
-          .setDateOfBirth(horse.dateOfBirth())
-          .setHeight(horse.height())
-          .setWeight(horse.weight())
-      ;
     } else {
-      addedCount = jdbcTemplate.update(SQL_INSERT,
-          horse.name(),
-          horse.sex().toString(),
-          horse.dateOfBirth(),
-          horse.height(),
-          horse.weight(),
-          horse.breed().id());
-
-      addedHorse = new Horse()
-          .setName(horse.name())
-          .setSex(horse.sex())
-          .setDateOfBirth(horse.dateOfBirth())
-          .setHeight(horse.height())
-          .setWeight(horse.weight())
-          .setBreedId(horse.breed().id())
-      ;
+      addedCount = jdbcTemplate.update(con -> {
+        PreparedStatement ps = con.prepareStatement(SQL_INSERT_WITH_BREED, Statement.RETURN_GENERATED_KEYS);
+        ps.setString(1, horse.name());
+        ps.setString(2, horse.sex().toString());
+        ps.setObject(3, horse.dateOfBirth());
+        ps.setFloat(4, horse.height());
+        ps.setFloat(5, horse.weight());
+        ps.setDouble(6, horse.breed().id());
+        return ps;
+      }, keyHolder);
     }
+    LOG.debug("addCount is {}", addedCount);
     if (addedCount > 1) {
       // This should never happen!!
       throw new FatalException("More than one horse was added");
@@ -135,22 +147,32 @@ public class HorseJdbcDao implements HorseDao {
       // This should never happen!!
       throw new FatalException("No horse was added");
     } else {
-      return addedHorse;
+      Number lastInsertedId = keyHolder.getKey();
+      if (lastInsertedId != null) {
+        try {
+          return getById(lastInsertedId.longValue());
+        } catch (NotFoundException e) {
+          throw new FatalException("Failed to retrieve newly added horse");
+        }
+      } else {
+        throw new FatalException("Failed to retrieve the last inserted ID");
+      }
     }
   }
 
   @Override
-  public Horse deleteById(long id) throws NotFoundException {
+  public void deleteById(long id) throws NotFoundException {
     LOG.trace("deleteById({})", id);
     Horse deletedHorse = getById(id); // Will throw exception if horse with given ID does not exist or exists multiple times.
     int deleted = jdbcTemplate.update(SQL_DELETE_BY_ID, id);
-    if (deleted == 0) {
-      throw new NotFoundException("Could not update horse with ID " + id + ", because it does not exist");
+    if (deleted <= 0) {
+      LOG.warn("Could not find horse with id " + id);
+      throw new NotFoundException("Could not find this horse, because it does not exist");
     }
     if (deleted > 1) {
+      //TODO fatal exceptions nur loggen, nicht dem user zurückgeben?
       throw new FatalException("Deleted more than one horse with the ID " + id);
     }
-    return deletedHorse;
   }
 
   @Override
@@ -168,30 +190,47 @@ public class HorseJdbcDao implements HorseDao {
 
 
   @Override
-  public Horse update(HorseDetailDto horse) throws NotFoundException {
+  public Horse update(HorseDetailDto horse) throws NotFoundException, ConflictException {
     LOG.trace("update({})", horse);
-    int updated = jdbcTemplate.update(SQL_UPDATE,
-        horse.name(),
-        horse.sex().toString(),
-        horse.dateOfBirth(),
-        horse.height(),
-        horse.weight(),
-        horse.breed().id(),
-        horse.id());
-    if (updated == 0) {
-      throw new NotFoundException("Could not update horse with ID " + horse.id() + ", because it does not exist");
+    int updated;
+    if (horse.breed() != null) {
+      HashSet<Long> set = new HashSet<>();
+      set.add(horse.breed().id());
+      if (this.breedDao.findBreedsById(set).isEmpty()) {
+        throw new ConflictException("Trying to update a horse with a not existing breed " + horse.breed().name(), Collections.singletonList("breeds"));
+      }
+      updated = jdbcTemplate.update(SQL_UPDATE_WITH_BREED,
+          horse.name(),
+          horse.sex().toString(),
+          horse.dateOfBirth(),
+          horse.height(),
+          horse.weight(),
+          horse.breed().id(),
+          horse.id());
+    } else {
+      updated = jdbcTemplate.update(SQL_UPDATE_WITHOUT_BREED,
+          horse.name(),
+          horse.sex().toString(),
+          horse.dateOfBirth(),
+          horse.height(),
+          horse.weight(),
+          horse.id());
     }
-    //TODO: check for ConflictException regarding breed not found in db.
-
-    return new Horse()
+    if (updated <= 0) {
+      throw new NotFoundException("Could not update the horse " + horse.name() + ", because it does not exist");
+    }
+    Horse horseToReturn = new Horse()
         .setId(horse.id())
         .setName(horse.name())
         .setSex(horse.sex())
         .setDateOfBirth(horse.dateOfBirth())
         .setHeight(horse.height())
-        .setWeight(horse.weight())
-        .setBreedId(horse.breed().id())
-        ;
+        .setWeight(horse.weight());
+    if (horse.breed() != null) {
+      return horseToReturn.setBreedId(horse.breed().id());
+    } else {
+      return horseToReturn;
+    }
   }
 
   /**
