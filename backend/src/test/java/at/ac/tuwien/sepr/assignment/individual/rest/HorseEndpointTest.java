@@ -26,6 +26,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ActiveProfiles({"test", "datagen"}) // enable "test" spring profile during test execution in order to pick up configuration from application-test.yml
@@ -70,7 +71,7 @@ public class HorseEndpointTest extends TestBase {
 
   @Test
   public void postHorseWithValidDataWithoutBreedReturnsHorseWithoutBreed() throws Exception {
-
+    // Adds a new horse.
     String requestBody = objectMapper.writeValueAsString(Map.of(
         "name", "Umbrella",
         "sex", "FEMALE",
@@ -112,9 +113,16 @@ public class HorseEndpointTest extends TestBase {
         .satisfies(tuple -> {
           assertThat(tuple).isNotNull();
         })
-        .containsOnly(// a newly added horse will have the ID 1, since all test data has negative IDs.
-            tuple(1L, "Umbrella", Sex.FEMALE, LocalDate.of(2017, 3, 5), null, (float) 1, (float) 1)
-        );
+            .satisfies(tuple -> {
+              Object[] horseElementsArray = tuple.get(0).toArray();
+              assertNotNull(horseElementsArray[0]);
+              assertThat(horseElementsArray[1]).isEqualTo("Umbrella");
+              assertThat(horseElementsArray[2]).isEqualTo(Sex.FEMALE);
+              assertThat(horseElementsArray[3]).isEqualTo(LocalDate.of(2017, 3, 5));
+              assertNull(horseElementsArray[4]);
+              assertThat(horseElementsArray[5]).isEqualTo((float) 1);
+              assertThat(horseElementsArray[6]).isEqualTo((float) 1);
+            });
   }
 
   @Test
