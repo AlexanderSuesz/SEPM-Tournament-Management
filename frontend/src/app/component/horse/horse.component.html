@@ -116,7 +116,9 @@
             </a>
             <a class="btn btn-sm responsive-danger-button"
                aria-label="Delete horse"
-               (click)="onDelete(horse.id)">
+               data-bs-target="#deleteConfirmationModal"
+               data-bs-toggle="modal"
+               (click)="selectHorseToDelete(horse)">
               <i class="bi bi-trash"></i>
             </a>
           </div>
@@ -125,3 +127,8 @@
     </tbody>
   </table>
 </div>
+
+<app-confirm-delete-dialog [deleteWhat]="horseForDeletion?.name"
+                           (confirm)="onDelete()"
+                           id="deleteConfirmationModal"
+                           ></app-confirm-delete-dialog>

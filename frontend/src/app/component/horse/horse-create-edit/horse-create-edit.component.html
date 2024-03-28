@@ -179,7 +179,8 @@
     <button type="button"
             class="btn btn-danger"
             *ngIf="!modeIsCreate"
-            (click)="onDelete()"
+            data-bs-target="#deleteConfirmationModal"
+            data-bs-toggle="modal"
             >
       <i class="bi bi-trash"></i>
       Delete
@@ -194,3 +195,8 @@
     </button>
   </div>
 </form>
+
+<app-confirm-delete-dialog [deleteWhat]="horse.name"
+                           (confirm)="onDelete()"
+                           id="deleteConfirmationModal"
+></app-confirm-delete-dialog>
