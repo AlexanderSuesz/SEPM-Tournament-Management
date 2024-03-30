@@ -248,18 +248,11 @@ public class HorseJdbcDao implements HorseDao {
     if (updated <= 0) {
       throw new NotFoundException("Couldn't update the horse " + horse.name() + ", because it does not exist");
     }
-    // TODO: use getID for horse instead.
-    Horse horseToReturn = new Horse()
-        .setId(horse.id())
-        .setName(horse.name())
-        .setSex(horse.sex())
-        .setDateOfBirth(horse.dateOfBirth())
-        .setHeight(horse.height())
-        .setWeight(horse.weight());
-    if (horse.breed() != null) {
-      return horseToReturn.setBreedId(horse.breed().id());
-    } else {
-      return horseToReturn;
+    try {
+      return getById(horse.id());
+    } catch (NotFoundException e) {
+      // This should never happen - couldn't find updated horse!!
+      throw new FatalException("Couldn't retrieve updated horse " + horse.name());
     }
   }
 
