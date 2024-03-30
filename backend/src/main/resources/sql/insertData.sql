@@ -3,8 +3,10 @@
 -- negative IDs are used to not interfere with user-entered data and allow clean deletion of test data
 
 DELETE FROM horse WHERE id < 0;
-DELETE  FROM breed WHERE id < 0;
+DELETE FROM breed WHERE id < 0;
+DELETE FROM tournament WHERE id < 0;
 
+-- adds breeds as test data
 INSERT INTO breed (id, name)
 VALUES
     (-1, 'Andalusian'),
@@ -28,7 +30,7 @@ VALUES
     (-19, 'Welsh Cob'),
     (-20, 'Welsh Pony');
 
--- Füge Pferdedaten hinzu
+-- adds horses as test data
 INSERT INTO horse (id, name, sex, date_of_birth, height, weight, breed_id)
 VALUES
     (-1, 'Wendy', 'FEMALE', '2019-08-05', 1.40, 380, -15),
@@ -64,3 +66,16 @@ VALUES
     (-31, 'Leo', 'MALE', '2017-03-05', 1.70, 720, -8),
     (-32, 'Luna', 'FEMALE', '2018-10-10', 1.62, 670, -19);
 
+-- adds tournaments as test data
+INSERT INTO tournament (id, name, start_date, end_date)
+VALUES
+    (-1, 'Noobz', '2007-08-05', '2007-08-10'),
+    (-2, 'Small Pony Tournament', '2008-10-05', '2008-08-10'),
+    (-3, 'The Big Ones', '2009-08-05', '2009-08-10'),
+    (-4, 'Heavens Match', '2010-08-05', '2010-08-10'),
+    (-5, 'Who is the real Spongebob?', '2011-08-05', '2011-08-10'),
+    (-6, 'Trivial Matters', '2012-08-05', '2012-08-10'),
+    (-7, 'Horses Go Brrrr', '2013-08-05', '2013-08-10'),
+    (-8, 'Hungry for glory', '2014-08-05', '2014-08-10'),
+    (-9, 'The big 8', '2015-08-05', '2015-08-10'),
+    (-10, 'Road to 42', '2016-08-05', '2016-08-10');

@@ -16,3 +16,11 @@ CREATE TABLE IF NOT EXISTS horse
   // TODO handle optional everywhere
   breed_id BIGINT REFERENCES breed(id)
 );
+
+CREATE TABLE IF NOT EXISTS tournament
+(
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL
+);
