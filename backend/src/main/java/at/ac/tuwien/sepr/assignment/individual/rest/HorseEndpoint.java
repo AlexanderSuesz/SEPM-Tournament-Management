@@ -4,6 +4,7 @@ import at.ac.tuwien.sepr.assignment.individual.dto.HorseDetailDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.HorseListDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.HorseSearchDto;
 import at.ac.tuwien.sepr.assignment.individual.exception.ConflictException;
+import at.ac.tuwien.sepr.assignment.individual.exception.FatalException;
 import at.ac.tuwien.sepr.assignment.individual.exception.NotFoundException;
 import at.ac.tuwien.sepr.assignment.individual.exception.ValidationException;
 import at.ac.tuwien.sepr.assignment.individual.service.HorseService;
@@ -51,7 +52,13 @@ public class HorseEndpoint {
   public Stream<HorseListDto> searchHorses(HorseSearchDto searchParameters) throws ValidationException {
     LOG.info("GET " + BASE_PATH);
     LOG.debug("request parameters: {}", searchParameters);
-    return service.search(searchParameters);
+    try {
+      return service.search(searchParameters);
+    } catch (FatalException e) {
+      HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+      logClientError(status, "Couldn't execute database query with the following these search parameters (" + searchParameters + ")", e);
+      throw new ResponseStatusException(status, e.getMessage(), e);
+    }
   }
 
   /**
@@ -69,6 +76,10 @@ public class HorseEndpoint {
       HttpStatus status = HttpStatus.NOT_FOUND;
       logClientError(status, "Horse to get details of not found", e);
       throw new ResponseStatusException(status, e.getMessage(), e);
+    } catch (FatalException e) {
+      HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+      logClientError(status, "Couldn't retrieve one horse with id " + id + " from database", e);
+      throw new ResponseStatusException(status, e.getMessage(), e);
     }
   }
 
@@ -85,7 +96,13 @@ public class HorseEndpoint {
   public HorseDetailDto add(@RequestBody HorseDetailDto toAdd) throws ValidationException {
     LOG.info("POST " + BASE_PATH);
     LOG.debug("Body of request:\n{}", toAdd);
-    return service.add(toAdd);
+    try {
+      return service.add(toAdd);
+    } catch (FatalException e) {
+      HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+      logClientError(status, "There was an error when adding the horse " + toAdd + " to the database", e);
+      throw new ResponseStatusException(status, e.getMessage(), e);
+    }
   }
 
   /**
@@ -111,6 +128,10 @@ public class HorseEndpoint {
       HttpStatus status = HttpStatus.CONFLICT;
       logClientError(status, "There was a conflict when updating a horse's data", e);
       throw new ResponseStatusException(status, e.getMessage(), e);
+    } catch (FatalException e) {
+      HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+      logClientError(status, "There was an error when updating the horse with this data (" + toUpdate + ")", e);
+      throw new ResponseStatusException(status, e.getMessage(), e);
     }
   }
 
@@ -126,12 +147,20 @@ public class HorseEndpoint {
       service.deleteById(id);
     } catch (NotFoundException e) {
       HttpStatus status = HttpStatus.NOT_FOUND;
-      logClientError(status, "Horse to delete not found", e);
+      logClientError(status, "No horse with id " + id + " found and therefore could not be deleted", e);
+      throw new ResponseStatusException(status, e.getMessage(), e);
+    } catch (FatalException e) {
+      HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+      logClientError(status, "Could not delete horse with id " + id, e);
       throw new ResponseStatusException(status, e.getMessage(), e);
     }
   }
 
   private void logClientError(HttpStatus status, String message, Exception e) {
-    LOG.warn("{} {}: {}: {}", status.value(), message, e.getClass().getSimpleName(), e.getMessage());
+    if (status != HttpStatus.INTERNAL_SERVER_ERROR) {
+      LOG.warn("{} {}: {}: {}", status.value(), message, e.getClass().getSimpleName(), e.getMessage());
+    } else { // when
+      LOG.error("{} {}: {}: {}: {}", status.value(), message, e.getClass().getSimpleName(), e.getMessage(), e.getStackTrace());
+    }
   }
 }

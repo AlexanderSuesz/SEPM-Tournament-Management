@@ -2,12 +2,15 @@ package at.ac.tuwien.sepr.assignment.individual.rest;
 
 import at.ac.tuwien.sepr.assignment.individual.dto.BreedDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.BreedSearchDto;
+import at.ac.tuwien.sepr.assignment.individual.exception.FatalException;
 import at.ac.tuwien.sepr.assignment.individual.service.BreedService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.lang.invoke.MethodHandles;
 import java.util.stream.Stream;
@@ -38,6 +41,20 @@ public class BreedEndpoint {
   public Stream<BreedDto> search(BreedSearchDto searchParams) {
     LOG.info("GET " + BASE_PATH);
     LOG.debug("Request Params: {}", searchParams);
-    return service.search(searchParams);
+    try {
+      return service.search(searchParams);
+    } catch (FatalException e) {
+      HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+      logClientError(status, "Couldn't execute database query with these search parameters (" + searchParams + ")", e);
+      throw new ResponseStatusException(status, e.getMessage(), e);
+    }
+  }
+
+  private void logClientError(HttpStatus status, String message, Exception e) {
+    if (status != HttpStatus.INTERNAL_SERVER_ERROR) {
+      LOG.warn("{} {}: {}: {}", status.value(), message, e.getClass().getSimpleName(), e.getMessage());
+    } else { // when
+      LOG.error("{} {}: {}: {}: {}", status.value(), message, e.getClass().getSimpleName(), e.getMessage(), e.getStackTrace());
+    }
   }
 }

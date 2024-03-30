@@ -2,6 +2,7 @@ package at.ac.tuwien.sepr.assignment.individual.persistence.impl;
 
 import at.ac.tuwien.sepr.assignment.individual.dto.BreedSearchDto;
 import at.ac.tuwien.sepr.assignment.individual.entity.Breed;
+import at.ac.tuwien.sepr.assignment.individual.exception.FatalException;
 import at.ac.tuwien.sepr.assignment.individual.persistence.BreedDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,13 +44,23 @@ public class BreedJdbcDao implements BreedDao {
   @Override
   public Collection<Breed> allBreeds() {
     LOG.trace("allBreeds()");
-    return jdbcTemplate.query(SQL_ALL, this::mapRow);
+    try {
+      return jdbcTemplate.query(SQL_ALL, this::mapRow);
+    } catch (Exception e) {
+      // This should never happen - the execution of the SQL query caused an exception!!
+      throw new FatalException("Couldn't retrieve all breeds");
+    }
   }
 
   @Override
   public Collection<Breed> findBreedsById(Set<Long> breedIds) {
     LOG.trace("findBreedsById({})", breedIds);
-    return jdbcTemplate.query(SQL_FIND_BY_IDS, Map.of("ids", breedIds), this::mapRow);
+    try {
+      return jdbcTemplate.query(SQL_FIND_BY_IDS, Map.of("ids", breedIds), this::mapRow);
+    } catch (Exception e) {
+      // This should never happen - the execution of the SQL query caused an exception!!
+      throw new FatalException("Couldn't retrieve chosen breeds");
+    }
   }
 
   @Override
@@ -58,7 +69,12 @@ public class BreedJdbcDao implements BreedDao {
     if (searchParams.limit() != null) {
       query += SQL_LIMIT_CLAUSE;
     }
-    return jdbcTemplate.query(query, new BeanPropertySqlParameterSource(searchParams), this::mapRow);
+    try {
+      return jdbcTemplate.query(query, new BeanPropertySqlParameterSource(searchParams), this::mapRow);
+    } catch (Exception e) {
+      // This should never happen - the execution of the SQL query caused an exception!!
+      throw new FatalException("Couldn't retrieve chosen breeds");
+    }
   }
 
   /**
