@@ -93,7 +93,7 @@ public class HorseValidator {
     List<String> validationErrors = new ArrayList<>();
     if (breed == null) {
       validationErrors.add("Name of the horse breed is too short"); // can't check for the rest if is null
-    } else if (breed.length() > 100) {
+    } else if (breed.length() > 32) {
       validationErrors.add("Name of the horse breed is too long");
     } else if (breed.length() <= 0) {
       validationErrors.add("Name of the horse breed is too short");
@@ -116,6 +116,11 @@ public class HorseValidator {
 
   private List<String> validateHeight(float height) {
     List<String> validationErrors = new ArrayList<>();
+    String heightString = String.valueOf(height);
+    if (!heightString.matches("^[0-9]{1,4}(.[0-9]{1,2})?")) {
+      // Database only allows entries with this specification
+      validationErrors.add("Only 4 pre- and 2 post-decimal numbers allowed");
+    }
     if (height > 3) {
       validationErrors.add("Horse height is too large");
     } else if (height <= 0) {
@@ -126,6 +131,11 @@ public class HorseValidator {
 
   private List<String> validateWeight(float weight) {
     List<String> validationErrors = new ArrayList<>();
+    String heightString = String.valueOf(weight);
+    if (!heightString.matches("^[0-9]{1,7}(.[0-9]{1,2})?")) {
+      // Database only allows entries with this specification
+      validationErrors.add("Only 7 pre- and 2 post-decimal numbers allowed");
+    }
     if (weight > 2000) {
       validationErrors.add("Horse weight is too big");
     } else if (weight <= 0) {
