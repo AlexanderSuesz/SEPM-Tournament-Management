@@ -47,13 +47,18 @@ public class BreedEndpoint {
       HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
       logClientError(status, "Couldn't execute database query with these search parameters (" + searchParams + ")", e);
       throw new ResponseStatusException(status, e.getMessage(), e);
+    } catch (Exception e) {
+      HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+      logClientError(status, "An unexpected error occurred when searching for breeds with these search parameters (" + searchParams + ")", e);
+      // We don't display the error message of the unexpected Exception e to the user since it could possibly display too much information to the user.
+      throw new ResponseStatusException(status, "An unexpected error occurred", e);
     }
   }
 
   private void logClientError(HttpStatus status, String message, Exception e) {
-    if (status != HttpStatus.INTERNAL_SERVER_ERROR) {
+    if (status != HttpStatus.INTERNAL_SERVER_ERROR) { // when an expected error occurs, then it should be logged with 'warn'
       LOG.warn("{} {}: {}: {}", status.value(), message, e.getClass().getSimpleName(), e.getMessage());
-    } else { // when
+    } else { // when a terrible unexpected error occurs, then it should be logged with 'error'
       LOG.error("{} {}: {}: {}: {}", status.value(), message, e.getClass().getSimpleName(), e.getMessage(), e.getStackTrace());
     }
   }

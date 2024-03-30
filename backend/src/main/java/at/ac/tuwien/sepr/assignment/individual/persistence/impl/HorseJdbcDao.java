@@ -104,7 +104,6 @@ public class HorseJdbcDao implements HorseDao {
       throw new FatalException("Failed to retrieve horse", e);
     }
     if (horses.isEmpty()) {
-      LOG.warn("No horse with ID %d found".formatted(id));
       throw new NotFoundException("Horse not found");
     }
     if (horses.size() > 1) {

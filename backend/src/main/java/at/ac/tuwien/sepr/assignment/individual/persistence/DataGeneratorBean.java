@@ -36,6 +36,7 @@ public class DataGeneratorBean {
    */
   @PostConstruct
   public void generateData() throws SQLException {
+    LOGGER.trace("generateData()");
     LOGGER.info("Generating data…");
     try (var connection = dataSource.getConnection()) {
       ScriptUtils.executeSqlScript(connection, new ClassPathResource("sql/insertData.sql"));
@@ -49,6 +50,7 @@ public class DataGeneratorBean {
    * @throws SQLException if an SQL error occurs while clearing data
    */
   public void clearData() throws SQLException {
+    LOGGER.trace("clearData()");
     LOGGER.info("Clearing data…");
     try (var connection = dataSource.getConnection()) {
       ScriptUtils.executeSqlScript(connection, new ClassPathResource("sql/deleteData.sql"));

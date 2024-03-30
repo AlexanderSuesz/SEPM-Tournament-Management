@@ -65,6 +65,7 @@ public class BreedJdbcDao implements BreedDao {
 
   @Override
   public Collection<Breed> search(BreedSearchDto searchParams) {
+    LOG.trace("search({})", searchParams);
     String query = SQL_SEARCH;
     if (searchParams.limit() != null) {
       query += SQL_LIMIT_CLAUSE;

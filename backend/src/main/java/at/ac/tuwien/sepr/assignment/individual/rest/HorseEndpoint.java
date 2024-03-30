@@ -54,10 +54,18 @@ public class HorseEndpoint {
     LOG.debug("request parameters: {}", searchParameters);
     try {
       return service.search(searchParameters);
+    } catch (ValidationException e) {
+      // ValidationException will be rethrown to be handled by the ApplicationExceptionHandler
+      throw e;
     } catch (FatalException e) {
       HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
       logClientError(status, "Couldn't execute database query with the following these search parameters (" + searchParameters + ")", e);
       throw new ResponseStatusException(status, e.getMessage(), e);
+    } catch (Exception e) {
+      HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+      logClientError(status, "An unexpected error occurred when searching for horses with these search parameters (" + searchParameters + ")", e);
+      // We don't display the error message of the unexpected Exception e to the user since it could possibly display too much information to the user.
+      throw new ResponseStatusException(status, "An unexpected error occurred", e);
     }
   }
 
@@ -74,12 +82,17 @@ public class HorseEndpoint {
       return service.getById(id);
     } catch (NotFoundException e) {
       HttpStatus status = HttpStatus.NOT_FOUND;
-      logClientError(status, "Horse to get details of not found", e);
+      logClientError(status, "Horse with id " + id + " not found", e);
       throw new ResponseStatusException(status, e.getMessage(), e);
     } catch (FatalException e) {
       HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
       logClientError(status, "Couldn't retrieve one horse with id " + id + " from database", e);
       throw new ResponseStatusException(status, e.getMessage(), e);
+    } catch (Exception e) {
+      HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+      logClientError(status, "An unexpected error occurred when searching for the horse with the id " + id, e);
+      // We don't display the error message of the unexpected Exception e to the user since it could possibly display too much information to the user.
+      throw new ResponseStatusException(status, "An unexpected error occurred", e);
     }
   }
 
@@ -98,10 +111,18 @@ public class HorseEndpoint {
     LOG.debug("Body of request:\n{}", toAdd);
     try {
       return service.add(toAdd);
+    } catch (ValidationException e) {
+      // ValidationException will be rethrown to be handled by the ApplicationExceptionHandler
+      throw e;
     } catch (FatalException e) {
       HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
       logClientError(status, "There was an error when adding the horse " + toAdd + " to the database", e);
       throw new ResponseStatusException(status, e.getMessage(), e);
+    } catch (Exception e) {
+      HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+      logClientError(status, "An unexpected error occurred when adding the horse " + toAdd + " to the database", e);
+      // We don't display the error message of the unexpected Exception e to the user since it could possibly display too much information to the user.
+      throw new ResponseStatusException(status, "An unexpected error occurred", e);
     }
   }
 
@@ -128,10 +149,18 @@ public class HorseEndpoint {
       HttpStatus status = HttpStatus.CONFLICT;
       logClientError(status, "There was a conflict when updating a horse's data", e);
       throw new ResponseStatusException(status, e.getMessage(), e);
+    } catch (ValidationException e) {
+      // ValidationException will be rethrown to be handled by the ApplicationExceptionHandler
+      throw e;
     } catch (FatalException e) {
       HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
       logClientError(status, "There was an error when updating the horse with this data (" + toUpdate + ")", e);
       throw new ResponseStatusException(status, e.getMessage(), e);
+    } catch (Exception e) {
+      HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+      logClientError(status, "An unexpected error occurred when updating the horse with this data (" + toUpdate + ")", e);
+      // We don't display the error message of the unexpected Exception e to the user since it could possibly display too much information to the user.
+      throw new ResponseStatusException(status, "An unexpected error occurred", e);
     }
   }
 
@@ -153,13 +182,18 @@ public class HorseEndpoint {
       HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
       logClientError(status, "Could not delete horse with id " + id, e);
       throw new ResponseStatusException(status, e.getMessage(), e);
+    } catch (Exception e) {
+      HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+      logClientError(status, "An unexpected error occurred when deleting the horse with the id " + id, e);
+      // We don't display the error message of the unexpected Exception e to the user since it could possibly display too much information to the user.
+      throw new ResponseStatusException(status, "An unexpected error occurred", e);
     }
   }
 
   private void logClientError(HttpStatus status, String message, Exception e) {
-    if (status != HttpStatus.INTERNAL_SERVER_ERROR) {
+    if (status != HttpStatus.INTERNAL_SERVER_ERROR) { // when an expected error occurs, then it should be logged with 'warn'
       LOG.warn("{} {}: {}: {}", status.value(), message, e.getClass().getSimpleName(), e.getMessage());
-    } else { // when
+    } else { // when a terrible unexpected error occurs, then it should be logged with 'error'
       LOG.error("{} {}: {}: {}: {}", status.value(), message, e.getClass().getSimpleName(), e.getMessage(), e.getStackTrace());
     }
   }

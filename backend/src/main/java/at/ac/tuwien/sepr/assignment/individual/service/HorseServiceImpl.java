@@ -44,7 +44,7 @@ public class HorseServiceImpl implements HorseService {
 
   @Override
   public Stream<HorseListDto> search(HorseSearchDto searchParameters) throws ValidationException {
-    LOG.info("search({})", searchParameters);
+    LOG.trace("search({})", searchParameters);
     validator.validateForSearch(searchParameters);
     var horses = dao.search(searchParameters);
     // First get all breed ids…
@@ -102,9 +102,8 @@ public class HorseServiceImpl implements HorseService {
   @Override
   public HorseDetailDto add(HorseDetailDto horse) throws ValidationException {
     LOG.trace("add({})", horse);
-    LOG.info("add({})", horse);
     validator.validateForInsert(horse);
-    LOG.info("now adding to db: {}", horse);
+    LOG.debug("now adding to db: {}", horse);
     Horse newlyAddedHorse = dao.add(horse);
     var breeds = breedMapForSingleHorse(newlyAddedHorse);
     return mapper.entityToDetailDto(newlyAddedHorse, breeds);
