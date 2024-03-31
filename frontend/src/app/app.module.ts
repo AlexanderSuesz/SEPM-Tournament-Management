@@ -14,9 +14,9 @@ import {HorseCreateEditComponent} from './component/horse/horse-create-edit/hors
 import {HorseComponent} from './component/horse/horse.component';
 import {ConfirmDeleteDialogComponent} from './component/confirm-delete-dialog/confirm-delete-dialog.component';
 import {TournamentCreateComponent} from './component/tournament/tournament-create/tournament-create.component';
+import {TournamentComponent} from "./component/tournament/tournament.component";
 import {TournamentStandingsComponent} from './component/tournament/tournament-standings/tournament-standings.component';
 import {TournamentStandingsBranchComponent} from './component/tournament/tournament-standings/tournament-standings-branch/tournament-standings-branch.component';
-
 @NgModule({
   declarations: [
     AppComponent,
@@ -37,6 +37,7 @@ import {TournamentStandingsBranchComponent} from './component/tournament/tournam
     ToastrModule.forRoot(),
     // Needed for Toastr
     BrowserAnimationsModule,
+    TournamentComponent,
   ],
   providers: [],
   bootstrap: [AppComponent]
