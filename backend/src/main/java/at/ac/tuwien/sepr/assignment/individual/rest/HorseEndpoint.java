@@ -45,7 +45,7 @@ public class HorseEndpoint {
    * Handles HTTP GET requests to search for horses based on the provided search parameters.
    *
    * @param searchParameters the search parameters for filtering horses
-   * @return a stream of HorseListDto objects representing the searched horses
+   * @return a stream of HorseListDto objects representing the filtered horses
    * @throws ValidationException if the search data is invalid
    */
   @GetMapping
@@ -59,7 +59,7 @@ public class HorseEndpoint {
       throw e;
     } catch (FatalException e) {
       HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-      logClientError(status, "Couldn't execute database query with the following these search parameters (" + searchParameters + ")", e);
+      logClientError(status, "Couldn't execute database query with the following search parameters (" + searchParameters + ")", e);
       throw new ResponseStatusException(status, e.getMessage(), e);
     } catch (Exception e) {
       HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
