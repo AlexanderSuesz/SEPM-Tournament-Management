@@ -84,6 +84,9 @@ public class HorseValidator {
         && searchParameters.bornEarliest().isAfter(searchParameters.bornLatest())) {
       validationErrors.add("Earliest date of birth needs to be before latest date of birth");
     }
+    if (searchParameters.name() != null) {
+      validationErrors.addAll(validateName(searchParameters.name()));
+    }
     if (!validationErrors.isEmpty()) {
       throw new ValidationException("Validation of search parameters failed", validationErrors);
     }

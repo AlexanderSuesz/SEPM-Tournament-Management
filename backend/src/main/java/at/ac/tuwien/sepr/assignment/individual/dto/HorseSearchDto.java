@@ -14,7 +14,7 @@ import java.time.LocalDate;
  * @param bornEarliest earliest birth time of the horse
  * @param bornLatest   latest birth time of the horse
  * @param breed        breed of the horse
- * @param limit        the maximum amount of breeds one wants as the result
+ * @param limit        the maximum amount of horses one wants as the result
  */
 
 public record HorseSearchDto(
