@@ -31,8 +31,8 @@ public class TournamentValidator {
     if (searchParameters.limit() != null && searchParameters.limit() < 0) {
       validationErrors.add("There can be can't be less than 0 tournaments displayed");
     }
-    if (searchParameters.earliestTournmantDay() != null && searchParameters.latestTournmantDay() != null
-        && searchParameters.earliestTournmantDay().isAfter(searchParameters.latestTournmantDay())) {
+    if (searchParameters.earliestTournamentDay() != null && searchParameters.latestTournamentDay() != null
+        && searchParameters.earliestTournamentDay().isAfter(searchParameters.latestTournamentDay())) {
       validationErrors.add("Earliest tournament date needs to be before latest tournament date");
     }
     if (searchParameters.name() != null) {
