@@ -133,10 +133,9 @@ public class HorseEndpoint {
    * @param toUpdate the HorseDetailDto containing the updated details of the horse
    * @return a HorseDetailDto representing the details of the updated horse
    * @throws ValidationException if the provided data for the updated horse is invalid
-   * @throws ConflictException   if there is a conflict while updating the horse
    */
   @PutMapping("{id}")
-  public HorseDetailDto update(@PathVariable("id") long id, @RequestBody HorseDetailDto toUpdate) throws ValidationException, ConflictException {
+  public HorseDetailDto update(@PathVariable("id") long id, @RequestBody HorseDetailDto toUpdate) throws ValidationException {
     LOG.info("PUT " + BASE_PATH + "/{}", toUpdate);
     LOG.debug("Body of request:\n{}", toUpdate);
     try {
