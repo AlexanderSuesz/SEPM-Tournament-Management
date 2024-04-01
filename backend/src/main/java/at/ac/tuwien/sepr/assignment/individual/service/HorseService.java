@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 public interface HorseService {
   /**
    * Search for horses in the persistent data store matching all provided fields.
-   * The name is considered a match, if the search string is a substring of the field in horse.
+   * The name is considered a match, if the search string is a substring of the field in Horse.
    *
    * @param searchParameters the search parameters to use in filtering.
    * @return the horses where the given fields match.
@@ -29,10 +29,10 @@ public interface HorseService {
    * in the persistent data store.
    *
    * @param horse the horse to update
-   * @return he updated horse
+   * @return the updated horse
    * @throws NotFoundException   if the horse with given ID does not exist in the persistent data store
    * @throws ValidationException if the update data given for the horse is in itself incorrect (no name, name too long …)
-   * @throws ConflictException   if the update data given for the horse is in conflict the data currently in the system (breed does not exist, …)
+   * @throws ConflictException   if the update data given for the horse is in conflict with the data currently in the system (breed does not exist, …)
    */
   HorseDetailDto update(HorseDetailDto horse) throws NotFoundException, ValidationException, ConflictException;
 
@@ -51,8 +51,8 @@ public interface HorseService {
    * Adds the horse in the persistent data store.
    *
    * @param horse the horse to add
-   * @return he updated horse
-   * @throws ValidationException if the data of the new horse is in itself incorrect (no name, name too long …)
+   * @return the added horse
+   * @throws ValidationException if the data of the new horse is in itself incorrect (no name, name too long, …)
    */
   HorseDetailDto add(HorseDetailDto horse) throws ValidationException;
 
