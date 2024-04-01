@@ -33,7 +33,8 @@ public class TournamentJdbcDao implements TournamentDao {
       + "      (:latestTournamentDay IS NULL AND t.end_date >= :earliestTournamentDay) OR"
       + "      (:earliestTournamentDay IS NULL AND t.start_date <= :latestTournamentDay) OR"
       + "      (t.end_date >= :earliestTournamentDay AND t.start_date <= :latestTournamentDay)"
-      + "     )";
+      + "     )"
+      + " ORDER BY t.start_date DESC"; // orders the resulting tournaments by their descending start date
 
   private static final String SQL_LIMIT_CLAUSE = " LIMIT :limit";
   private final JdbcTemplate jdbcTemplate;
