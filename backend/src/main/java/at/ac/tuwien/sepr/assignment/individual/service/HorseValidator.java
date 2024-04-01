@@ -2,6 +2,7 @@ package at.ac.tuwien.sepr.assignment.individual.service;
 
 import at.ac.tuwien.sepr.assignment.individual.dto.HorseDetailDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.HorseSearchDto;
+import at.ac.tuwien.sepr.assignment.individual.dto.HorseSelectionDto;
 import at.ac.tuwien.sepr.assignment.individual.exception.ValidationException;
 import at.ac.tuwien.sepr.assignment.individual.type.Sex;
 import org.slf4j.Logger;
@@ -31,7 +32,7 @@ public class HorseValidator {
     LOG.trace("validateForUpdate({})", horse);
     List<String> validationErrors = new ArrayList<>();
     if (horse.id() == null) {
-      validationErrors.add("No ID given");
+      validationErrors.add("No identifier given");
     }
     validationErrors.addAll(validateBirthdateNotInFuture(horse.dateOfBirth()));
     if (horse.breed() != null) {
@@ -42,7 +43,7 @@ public class HorseValidator {
     validationErrors.addAll(validateHeight(horse.height()));
     validationErrors.addAll(validateWeight(horse.weight()));
     if (!validationErrors.isEmpty()) {
-      throw new ValidationException("Validation of horse to update failed", validationErrors);
+      throw new ValidationException("Validation of the horse to be updated failed", validationErrors);
     }
   }
 
@@ -64,14 +65,14 @@ public class HorseValidator {
     validationErrors.addAll(validateHeight(horse.height()));
     validationErrors.addAll(validateWeight(horse.weight()));
     if (!validationErrors.isEmpty()) {
-      throw new ValidationException("Validation of horse to add failed", validationErrors);
+      throw new ValidationException("Validation of the horse to be added failed", validationErrors);
     }
   }
 
   /**
    * Validates the provided search parameters before performing the search operation (searching for the horses in the persistence storage).
    *
-   * @param searchParameters the search parameters after which horses should be selected
+   * @param searchParameters the search parameters used for selecting the horses
    * @throws ValidationException if validation fails due to invalid data
    */
   public void validateForSearch(HorseSearchDto searchParameters) throws ValidationException {
@@ -88,7 +89,40 @@ public class HorseValidator {
       validationErrors.addAll(validateName(searchParameters.name()));
     }
     if (!validationErrors.isEmpty()) {
-      throw new ValidationException("Validation of search parameters failed", validationErrors);
+      throw new ValidationException("Validation of the search parameters failed", validationErrors);
+    }
+  }
+
+  /**
+   * Validates the provided horse details before adding the horse to a tournament.
+   *
+   * @param horse the horse details to validate
+   * @param startDateOfTournament the start date of the tournament
+   * @throws ValidationException if validation fails due to invalid data
+   */
+  public void validateForCompatibilityWithTournament(HorseSelectionDto horse, LocalDate startDateOfTournament) throws ValidationException {
+    LOG.trace("validateForCompatibilityWithTournament({}, {})", horse, startDateOfTournament);
+    List<String> validationErrors = new ArrayList<>();
+    validationErrors.addAll(validateName(horse.name()));
+    boolean tournamentDateIsNull = false;
+    boolean horseDateIsNull = false;
+    if (startDateOfTournament == null) {
+      tournamentDateIsNull = true;
+      validationErrors.add("No valid tournament date provided");
+    }
+    if (horse.dateOfBirth() == null) {
+      horseDateIsNull = true;
+      validationErrors.add("Horse has invalid date of birth");
+    }
+    if (!tournamentDateIsNull && !horseDateIsNull) {
+      // We can only compare the horse date to the tournament date if both dates are not null
+      if (horse.dateOfBirth().isAfter(startDateOfTournament)) {
+        validationErrors.add("A horse can't take part in the tournament if it is born after the tournament start date");
+      }
+    }
+
+    if (!validationErrors.isEmpty()) {
+      throw new ValidationException("Validation of horse compatibility with tournament failed", validationErrors);
     }
   }
 
