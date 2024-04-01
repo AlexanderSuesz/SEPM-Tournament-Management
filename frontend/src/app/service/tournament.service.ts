@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {environment} from '../../environments/environment';
-import {map, Observable, tap, throwError} from 'rxjs';
+import {map, Observable, tap} from 'rxjs';
 import {formatIsoDate} from '../util/date-helper';
 import {
   TournamentCreateDto, TournamentDetailDto, TournamentDetailParticipantDto,
@@ -22,10 +22,17 @@ export class TournamentService {
   ) {
   }
 
-
+  /**
+   * Create a new tournament in the system.
+   *
+   * @param tournament the data for the tournament that should be created
+   * @return an Observable for the created tournament
+   */
   public create(tournament: TournamentCreateDto): Observable<TournamentDetailDto> {
-    // TODO this is not implemented yet!
-    return throwError(() => ({message: "Not implemented yet"}));
+    return this.http.post<TournamentDetailDto>(
+      baseUri,
+      tournament
+    );
   }
 
   search(searchParams: TournamentSearchParams): Observable<TournamentListDto[]> {
