@@ -11,6 +11,7 @@ import at.ac.tuwien.sepr.assignment.individual.exception.NotFoundException;
 import at.ac.tuwien.sepr.assignment.individual.exception.ValidationException;
 import at.ac.tuwien.sepr.assignment.individual.mapper.TournamentMapper;
 import at.ac.tuwien.sepr.assignment.individual.persistence.HorseDao;
+import at.ac.tuwien.sepr.assignment.individual.persistence.HorseMappedToTournamentDao;
 import at.ac.tuwien.sepr.assignment.individual.persistence.TournamentDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,12 +30,18 @@ public class TournamentServiceImpl implements TournamentService {
   private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
   private final TournamentDao tournamentDao;
   private final HorseDao horseDao; // Necessary for checking for ConflictException when adding horses to a tournament
+  private final HorseMappedToTournamentDao horseMappedToTournamentDao;
   private final TournamentMapper mapper;
   private final TournamentValidator validator;
 
-  public TournamentServiceImpl(TournamentDao tournamentDao, HorseDao horseDao, TournamentMapper mapper, TournamentValidator validator) {
+  public TournamentServiceImpl(TournamentDao tournamentDao,
+                               HorseDao horseDao,
+                               HorseMappedToTournamentDao horseMappedToTournamentDao,
+                               TournamentMapper mapper,
+                               TournamentValidator validator) {
     this.tournamentDao = tournamentDao;
     this.horseDao = horseDao;
+    this.horseMappedToTournamentDao = horseMappedToTournamentDao;
     this.mapper = mapper;
     this.validator = validator;
   }
@@ -54,8 +61,8 @@ public class TournamentServiceImpl implements TournamentService {
     validator.validateForInsert(tournament);
     Horse[] horses = new Horse[tournament.participants().length];
     for (int i = 0; i < tournament.participants().length; i++) {
-      try {
-        Horse horse = horseDao.getById(tournament.participants()[i].id()); // checks for conflict exception and is used to create the TournamentDetailDto
+      try { // Checks if horse doesn't exist (ConflictException)
+        Horse horse = horseDao.getById(tournament.participants()[i].id()); // will throw NotFoundException if horse not found
         horses[i] = horse;
       } catch (NotFoundException e) {
         LOG.debug("horse {} not found", tournament.participants()[i].id());
@@ -65,7 +72,10 @@ public class TournamentServiceImpl implements TournamentService {
     }
     LOG.debug("now adding to db: {}", tournament);
     Tournament newlyAddedTournament = tournamentDao.add(tournament);
-
+    LOG.debug("This tournament was added to db: {}", newlyAddedTournament);
+    for (int i = 0; i < tournament.participants().length; i++) {
+      horseMappedToTournamentDao.add(tournament.participants()[i].id(), newlyAddedTournament.getId());
+    }
     return mapper.entityToDetailDto(newlyAddedTournament, horses);
   }
 }
