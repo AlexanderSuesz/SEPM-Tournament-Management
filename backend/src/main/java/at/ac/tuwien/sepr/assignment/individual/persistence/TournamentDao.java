@@ -1,5 +1,6 @@
 package at.ac.tuwien.sepr.assignment.individual.persistence;
 
+import at.ac.tuwien.sepr.assignment.individual.dto.TournamentCreateDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentSearchDto;
 import at.ac.tuwien.sepr.assignment.individual.entity.Tournament;
 
@@ -20,4 +21,13 @@ public interface TournamentDao {
    * @return the tournaments where all given parameters match.
    */
   Collection<Tournament> search(TournamentSearchDto searchParameters);
+
+  /**
+   * Add the tournament with the data given in {@code tournament}
+   * in the persistent data store.
+   *
+   * @param tournament the tournament to add
+   * @return the added tournament
+   */
+  Tournament add(TournamentCreateDto tournament);
 }

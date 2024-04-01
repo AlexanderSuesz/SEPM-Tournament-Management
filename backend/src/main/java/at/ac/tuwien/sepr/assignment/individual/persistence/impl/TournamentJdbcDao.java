@@ -1,5 +1,6 @@
 package at.ac.tuwien.sepr.assignment.individual.persistence.impl;
 
+import at.ac.tuwien.sepr.assignment.individual.dto.TournamentCreateDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentSearchDto;
 import at.ac.tuwien.sepr.assignment.individual.entity.Tournament;
 import at.ac.tuwien.sepr.assignment.individual.exception.FatalException;
@@ -9,11 +10,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.lang.invoke.MethodHandles;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Collection;
 
 /**
@@ -36,9 +41,13 @@ public class TournamentJdbcDao implements TournamentDao {
       + "     )"
       + " ORDER BY t.start_date DESC"; // orders the resulting tournaments by their descending start date
 
+  private static final String SQL_INSERT_TOURNAMENT = "INSERT INTO "
+      + TABLE_NAME
+      + " (name, start_date, end_date) VALUES (?, ?, ?)";
   private static final String SQL_LIMIT_CLAUSE = " LIMIT :limit";
   private final JdbcTemplate jdbcTemplate;
   private final NamedParameterJdbcTemplate jdbcNamed;
+
 
   public TournamentJdbcDao(
       NamedParameterJdbcTemplate jdbcNamed,
@@ -61,6 +70,44 @@ public class TournamentJdbcDao implements TournamentDao {
       // This should never happen - the execution of the SQL query caused an exception!!
       throw new FatalException("Couldn't search for tournaments");
     }
+  }
+
+  @Override
+  public Tournament add(TournamentCreateDto tournament) {
+    LOG.trace("add({})", tournament);
+    int addedCount;
+    KeyHolder keyHolder = new GeneratedKeyHolder(); // Will contain the key (id) of the newly added tournament.
+    try {
+      addedCount = jdbcTemplate.update(con -> {
+        PreparedStatement ps = con.prepareStatement(SQL_INSERT_TOURNAMENT, Statement.RETURN_GENERATED_KEYS);
+        ps.setString(1, tournament.name());
+        ps.setObject(2, tournament.startDate());
+        ps.setObject(3, tournament.endDate());
+        return ps;
+      }, keyHolder);
+    } catch (Exception e) {
+      // This should never happen - the execution of the SQL query caused an exception!!
+      throw new FatalException("Failed to add tournament", e);
+    }
+    LOG.debug("The tournament ({}) was added {} times to the database", tournament, addedCount);
+    if (addedCount > 1) {
+      // This should never happen - more than one tournament was added!!
+      throw new FatalException("More than one tournament was added");
+    } else if (addedCount <= 0) {
+      // This should never happen - no tournament was added!!
+      throw new FatalException("No tournament was added");
+    }
+    Number lastInsertedId = keyHolder.getKey();
+    if (lastInsertedId == null) {
+      // This should never happen - the new tournament should be retrievable from the database!!
+      throw new FatalException("Failed to identify newly added tournament");
+    }
+    LOG.debug("A new tournament with the id {} was created", lastInsertedId);
+    return new Tournament()
+        .setId((long) lastInsertedId)
+        .setName(tournament.name())
+        .setStartDate(tournament.startDate())
+        .setEndDate(tournament.endDate());
   }
 
   /**
