@@ -61,6 +61,7 @@ public interface HorseService {
    *
    * @param id the ID of the horse to delete
    * @throws NotFoundException if the horse with the given ID does not exist in the persistent data store
+   * @throws ConflictException if the horse is in conflict with the data currently in the system (horse already participates in a tournament)
    */
-  void deleteById(long id) throws NotFoundException;
+  void deleteById(long id) throws NotFoundException, ConflictException;
 }

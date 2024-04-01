@@ -10,6 +10,7 @@ import at.ac.tuwien.sepr.assignment.individual.exception.NotFoundException;
 import at.ac.tuwien.sepr.assignment.individual.exception.ValidationException;
 import at.ac.tuwien.sepr.assignment.individual.mapper.HorseMapper;
 import at.ac.tuwien.sepr.assignment.individual.persistence.HorseDao;
+import at.ac.tuwien.sepr.assignment.individual.persistence.HorseMappedToTournamentDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -30,13 +31,19 @@ import java.util.stream.Stream;
 @Service
 public class HorseServiceImpl implements HorseService {
   private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-  private final HorseDao dao;
+  private final HorseDao horseDao;
+  private final HorseMappedToTournamentDao horseMappedToTournamentDao;
   private final HorseMapper mapper;
   private final HorseValidator validator;
   private final BreedService breedService;
 
-  public HorseServiceImpl(HorseDao dao, HorseMapper mapper, HorseValidator validator, BreedService breedService) {
-    this.dao = dao;
+  public HorseServiceImpl(HorseDao horseDao,
+                          HorseMappedToTournamentDao horseMappedToTournamentDao,
+                          HorseMapper mapper,
+                          HorseValidator validator,
+                          BreedService breedService) {
+    this.horseDao = horseDao;
+    this.horseMappedToTournamentDao = horseMappedToTournamentDao;
     this.mapper = mapper;
     this.validator = validator;
     this.breedService = breedService;
@@ -46,7 +53,7 @@ public class HorseServiceImpl implements HorseService {
   public Stream<HorseListDto> search(HorseSearchDto searchParameters) throws ValidationException {
     LOG.trace("search({})", searchParameters);
     validator.validateForSearch(searchParameters);
-    var horses = dao.search(searchParameters);
+    var horses = horseDao.search(searchParameters);
     // First get all breed ids…
     var breeds = horses.stream()
         .map(Horse::getBreedId)
@@ -64,7 +71,7 @@ public class HorseServiceImpl implements HorseService {
   public HorseDetailDto update(HorseDetailDto horse) throws NotFoundException, ValidationException, ConflictException {
     LOG.trace("update({})", horse);
     validator.validateForUpdate(horse);
-    var updatedHorse = dao.update(horse);
+    var updatedHorse = horseDao.update(horse);
     var breeds = breedMapForSingleHorse(updatedHorse);
     return mapper.entityToDetailDto(updatedHorse, breeds);
   }
@@ -73,7 +80,7 @@ public class HorseServiceImpl implements HorseService {
   @Override
   public HorseDetailDto getById(long id) throws NotFoundException {
     LOG.trace("details({})", id);
-    Horse horse = dao.getById(id);
+    Horse horse = horseDao.getById(id);
     var breeds = breedMapForSingleHorse(horse);
     return mapper.entityToDetailDto(horse, breeds);
   }
@@ -104,14 +111,19 @@ public class HorseServiceImpl implements HorseService {
     LOG.trace("add({})", horse);
     validator.validateForInsert(horse);
     LOG.debug("now adding to db: {}", horse);
-    Horse newlyAddedHorse = dao.add(horse);
+    Horse newlyAddedHorse = horseDao.add(horse);
     var breeds = breedMapForSingleHorse(newlyAddedHorse);
     return mapper.entityToDetailDto(newlyAddedHorse, breeds);
   }
 
   @Override
-  public void deleteById(long id) throws NotFoundException {
+  public void deleteById(long id) throws NotFoundException, ConflictException {
     LOG.trace("delete({})", id);
-    dao.deleteById(id);
+    LOG.debug("checking if horse is currently in a tournament");
+    if (horseMappedToTournamentDao.countTournamentsForHorse(id) > 0) {
+      throw new ConflictException("Horse can't be deleted, since it participates in a tournament", Collections.singletonList("Horse is in a tournament"));
+    }
+    LOG.debug("No conflict - horse with id {} will now be deleted", id);
+    horseDao.deleteById(id);
   }
 }

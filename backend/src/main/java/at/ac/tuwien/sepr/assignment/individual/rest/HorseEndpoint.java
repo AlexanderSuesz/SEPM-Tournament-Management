@@ -177,6 +177,10 @@ public class HorseEndpoint {
       HttpStatus status = HttpStatus.NOT_FOUND;
       logClientError(status, "No horse with id " + id + " found and therefore could not be deleted", e);
       throw new ResponseStatusException(status, e.getMessage(), e);
+    } catch (ConflictException e) {
+      HttpStatus status = HttpStatus.CONFLICT;
+      logClientError(status, "Horse with id " + id + " could not be deleted, since it already participates in a tournament", e);
+      throw new ResponseStatusException(status, e.getMessage(), e);
     } catch (FatalException e) {
       HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
       logClientError(status, "Could not delete horse with id " + id, e);
