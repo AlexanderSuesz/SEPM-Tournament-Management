@@ -24,3 +24,13 @@ CREATE TABLE IF NOT EXISTS tournament
     start_date DATE NOT NULL,
     end_date DATE NOT NULL
 );
+
+-- a table which maps horses to tournaments, also saves their entry number and round reached inside the tournament
+CREATE TABLE IF NOT EXISTS horse_mapped_to_tournament
+(
+    tournament_id BIGINT REFERENCES tournament (id),
+    horse_id BIGINT REFERENCES horse (id),
+    PRIMARY KEY (tournament_id, horse_id),
+    entry_number BIGINT,
+    round_reached BIGINT
+);

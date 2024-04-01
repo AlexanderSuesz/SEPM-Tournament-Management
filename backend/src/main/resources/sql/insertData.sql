@@ -2,7 +2,21 @@
 -- the IDs are hardcoded to enable references between further test data
 -- negative IDs are used to not interfere with user-entered data and allow clean deletion of test data
 
+-- a foreign key constraint is used to prevent the destruction of links between tables.
+-- we can only delete certain foreign key database entries if we first remove the constraint (we can add it again afterwards)
+ALTER TABLE horse_mapped_to_tournament DROP CONSTRAINT IF EXISTS tournament_id;
+ALTER TABLE horse_mapped_to_tournament DROP CONSTRAINT IF EXISTS horse_id;
+DELETE FROM horse_mapped_to_tournament WHERE tournament_id < 0 OR horse_id < 0;
+
+-- we do the same for the horse table
+ALTER TABLE horse DROP CONSTRAINT IF EXISTS breed_id;
 DELETE FROM horse WHERE id < 0;
+
+-- now we add the foreign key constraints back into the tables
+ALTER TABLE horse ADD FOREIGN KEY (breed_id) REFERENCES breed (id);
+ALTER TABLE horse_mapped_to_tournament ADD FOREIGN KEY (tournament_id) REFERENCES tournament (id);
+ALTER TABLE horse_mapped_to_tournament ADD FOREIGN KEY (horse_id) REFERENCES horse (id);
+
 DELETE FROM breed WHERE id < 0;
 DELETE FROM tournament WHERE id < 0;
 
@@ -70,12 +84,24 @@ VALUES
 INSERT INTO tournament (id, name, start_date, end_date)
 VALUES
     (-1, 'Noobz', '2007-08-05', '2007-08-10'),
-    (-2, 'Small Pony Tournament', '2008-10-05', '2008-08-10'),
+    (-2, 'Small Pony Tournament', '2018-10-05', '2018-08-10'),
     (-3, 'The Big Ones', '2009-08-05', '2009-08-10'),
     (-4, 'Heavens Match', '2010-08-05', '2010-08-10'),
-    (-5, 'Who is the real Spongebob?', '2011-08-05', '2011-08-10'),
+    (-5, 'Who is the real Spongebob?', '2021-08-05', '2021-08-10'),
     (-6, 'Trivial Matters', '2012-08-05', '2012-08-10'),
     (-7, 'Horses Go Brrrr', '2013-08-05', '2013-08-10'),
     (-8, 'Hungry for glory', '2014-08-05', '2014-08-10'),
     (-9, 'The big 8', '2015-08-05', '2015-08-10'),
     (-10, 'Road to 42', '2016-08-05', '2016-08-10');
+
+-- adds tournament ot horse mapping as test data
+INSERT INTO horse_mapped_to_tournament (tournament_id, horse_id)
+VALUES
+    (-10, -3),
+    (-10, -4),
+    (-10, -5),
+    (-10, -6),
+    (-10, -7),
+    (-10, -8),
+    (-10, -9),
+    (-10, -10);
