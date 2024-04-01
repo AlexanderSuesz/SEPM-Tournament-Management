@@ -36,9 +36,9 @@ import java.util.List;
 @Repository
 public class HorseJdbcDao implements HorseDao {
   private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
   private static final String TABLE_NAME = "horse";
   private static final String SQL_SELECT_BY_ID = "SELECT * FROM " + TABLE_NAME + " WHERE id = ?";
+
   private static final String SQL_SELECT_SEARCH = "SELECT  "
       + "    h.id as \"id\", h.name as \"name\", h.sex as \"sex\", h.date_of_birth as \"date_of_birth\""
       + "    , h.height as \"height\", h.weight as \"weight\", h.breed_id as \"breed_id\""
@@ -146,7 +146,7 @@ public class HorseJdbcDao implements HorseDao {
       // This should never happen - the execution of the SQL query caused an exception!!
       throw new FatalException("Failed to add horse", e);
     }
-    LOG.debug("addCount is {}", addedCount);
+    LOG.debug("The horse {} was added {} times", horse, addedCount);
     if (addedCount > 1) {
       // This should never happen - more than one horse was added!!
       throw new FatalException("More than one horse was added");
@@ -215,7 +215,7 @@ public class HorseJdbcDao implements HorseDao {
       HashSet<Long> set = new HashSet<>();
       set.add(horse.breed().id());
       if (this.breedDao.findBreedsById(set).isEmpty()) {
-        throw new ConflictException("Trying to update a horse with a not existing breed " + horse.breed().name(), Collections.singletonList("breeds"));
+        throw new ConflictException("Trying to update a horse with a not existing breed " + horse.breed().name(), Collections.singletonList("breed not found"));
       }
       try {
         updated = jdbcTemplate.update(SQL_UPDATE_WITH_BREED,
