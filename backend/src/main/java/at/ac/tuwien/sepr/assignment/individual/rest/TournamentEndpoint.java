@@ -1,7 +1,10 @@
 package at.ac.tuwien.sepr.assignment.individual.rest;
 
+import at.ac.tuwien.sepr.assignment.individual.dto.TournamentCreateDto;
+import at.ac.tuwien.sepr.assignment.individual.dto.TournamentDetailDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentListDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentSearchDto;
+import at.ac.tuwien.sepr.assignment.individual.exception.ConflictException;
 import at.ac.tuwien.sepr.assignment.individual.exception.FatalException;
 import at.ac.tuwien.sepr.assignment.individual.exception.ValidationException;
 import at.ac.tuwien.sepr.assignment.individual.service.TournamentService;
@@ -9,7 +12,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -54,6 +60,39 @@ public class TournamentEndpoint {
     } catch (Exception e) {
       HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
       logClientError(status, "An unexpected error occurred when searching for tournaments with these search parameters (" + searchParameters + ")", e);
+      // We don't display the error message of the unexpected Exception e to the user since it could possibly display too much information to the user.
+      throw new ResponseStatusException(status, "An unexpected error occurred", e);
+    }
+  }
+
+  /**
+   * Handles HTTP POST requests to add a new tournament.
+   *
+   * @param toAdd the TournamentCreateDto containing the details of the tournament to add
+   * @return a TournamentDetailDto representing the details of the added tournament
+   * @throws ValidationException if the provided data for the new tournament is invalid
+   */
+  @PostMapping
+  @ResponseStatus(HttpStatus.CREATED)
+  public TournamentDetailDto add(@RequestBody TournamentCreateDto toAdd) throws ValidationException {
+    LOG.info("POST " + BASE_PATH);
+    LOG.debug("Body of request:\n{}", toAdd);
+    try {
+      return service.add(toAdd);
+    } catch (ValidationException e) {
+      // ValidationException will be rethrown to be handled by the ApplicationExceptionHandler
+      throw e;
+    } catch (ConflictException e) {
+      HttpStatus status = HttpStatus.CONFLICT;
+      logClientError(status, "There was a conflict when adding the tournament (a horse which takes part in the tournament doesn't exist)", e);
+      throw new ResponseStatusException(status, e.getMessage(), e);
+    } catch (FatalException e) {
+      HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+      logClientError(status, "There was an error when adding the tournament " + toAdd + " to the database", e);
+      throw new ResponseStatusException(status, e.getMessage(), e);
+    } catch (Exception e) {
+      HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+      logClientError(status, "An unexpected error occurred when adding the tournament " + toAdd + " to the database", e);
       // We don't display the error message of the unexpected Exception e to the user since it could possibly display too much information to the user.
       throw new ResponseStatusException(status, "An unexpected error occurred", e);
     }
