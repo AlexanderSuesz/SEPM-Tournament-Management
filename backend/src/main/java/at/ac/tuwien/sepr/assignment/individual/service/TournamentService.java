@@ -5,6 +5,7 @@ import at.ac.tuwien.sepr.assignment.individual.dto.TournamentDetailDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentListDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentSearchDto;
 import at.ac.tuwien.sepr.assignment.individual.exception.ConflictException;
+import at.ac.tuwien.sepr.assignment.individual.exception.NotFoundException;
 import at.ac.tuwien.sepr.assignment.individual.exception.ValidationException;
 
 import java.util.stream.Stream;
@@ -32,4 +33,13 @@ public interface TournamentService {
    * @throws ConflictException if the tournament data is in conflict with the data currently in the system (horse in tournament doesn't exist in database)
    */
   TournamentDetailDto add(TournamentCreateDto tournament) throws ValidationException, ConflictException;
+
+  /**
+   * Retrieves the details about a tournament with the given id.
+   *
+   * @param id the id of the tournament
+   * @return the details of this tournament
+   * @throws NotFoundException if no tournament with this id exists
+   */
+  TournamentDetailDto getTournamentDetailsById(long id) throws NotFoundException;
 }

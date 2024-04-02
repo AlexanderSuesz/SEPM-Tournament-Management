@@ -6,12 +6,14 @@ import at.ac.tuwien.sepr.assignment.individual.dto.TournamentListDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentSearchDto;
 import at.ac.tuwien.sepr.assignment.individual.exception.ConflictException;
 import at.ac.tuwien.sepr.assignment.individual.exception.FatalException;
+import at.ac.tuwien.sepr.assignment.individual.exception.NotFoundException;
 import at.ac.tuwien.sepr.assignment.individual.exception.ValidationException;
 import at.ac.tuwien.sepr.assignment.individual.service.TournamentService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -66,6 +68,35 @@ public class TournamentEndpoint {
   }
 
   /**
+   * Handles HTTP GET requests to retrieve details of a specific tournament by its ID.
+   *
+   * @param id ID of the tournament
+   * @return a TournamentDetailDto representing the details of the requested tournament
+   */
+  @GetMapping("/standings/{id}")
+  public TournamentDetailDto getTournamentDetailsById(@PathVariable("id") long id) {
+    LOG.info("GET " + BASE_PATH + "/standings/{}", id);
+    try {
+      TournamentDetailDto tournamentDetails = service.getTournamentDetailsById(id);
+      LOG.debug("The following tournament details will be sent to /standings/{} : ({})", id, tournamentDetails);
+      return tournamentDetails;
+    } catch (NotFoundException e) {
+      HttpStatus status = HttpStatus.NOT_FOUND;
+      logClientError(status, "No tournament with the id " + id + " found in the database", e);
+      throw new ResponseStatusException(status, e.getMessage(), e);
+    } catch (FatalException e) {
+      HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+      logClientError(status, "There was an error when retrieving the data of the tournament with id " + id + " from the database", e);
+      throw new ResponseStatusException(status, e.getMessage(), e);
+    } catch (Exception e) {
+      HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+      logClientError(status, "There was an error when retrieving the data of the tournament with id " + id + " from the database", e);
+      // We don't display the error message of the unexpected Exception e to the user since it could possibly display too much information to the user.
+      throw new ResponseStatusException(status, "An unexpected error occurred", e);
+    }
+  }
+
+  /**
    * Handles HTTP POST requests to add a new tournament.
    *
    * @param toAdd the TournamentCreateDto containing the details of the tournament to add
@@ -75,7 +106,7 @@ public class TournamentEndpoint {
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   public TournamentDetailDto add(@RequestBody TournamentCreateDto toAdd) throws ValidationException {
-    LOG.info("POST " + BASE_PATH);
+    LOG.info("POST " + BASE_PATH + "/create");
     LOG.debug("Body of request:\n{}", toAdd);
     try {
       return service.add(toAdd);

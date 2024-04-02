@@ -2,6 +2,9 @@ package at.ac.tuwien.sepr.assignment.individual.persistence;
 
 import at.ac.tuwien.sepr.assignment.individual.entity.Standing;
 import at.ac.tuwien.sepr.assignment.individual.exception.ConflictException;
+import at.ac.tuwien.sepr.assignment.individual.exception.NotFoundException;
+
+import java.util.List;
 
 /**
  * Data Access Object for the mapping of horses to tournaments together with the horse's standing in the tournament.
@@ -25,6 +28,15 @@ public interface HorseMappedToTournamentDao {
    * @return the occurrence count of the given mapping in the database
    */
   int countOccurrenceOfEntry(long horseId, long tournamentId);
+
+  /**
+   * Retrieves the ID of every horse which takes part in this tournament (represented by the given tournamentId)
+   *
+   * @param tournamentId the id of the tournament of which the horses should be retrieved
+   * @return a list of all standings of the horses taking part in this tournament
+   * @throws NotFoundException if no horse to tournament mapping was found
+   */
+  List<Standing> getHorsesInTournament(long tournamentId) throws NotFoundException;
 
   /**
    * Add the horse id mapped to the tournament id in the persistent data store.

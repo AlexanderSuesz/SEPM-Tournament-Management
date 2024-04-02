@@ -3,6 +3,7 @@ package at.ac.tuwien.sepr.assignment.individual.persistence;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentCreateDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentSearchDto;
 import at.ac.tuwien.sepr.assignment.individual.entity.Tournament;
+import at.ac.tuwien.sepr.assignment.individual.exception.NotFoundException;
 
 import java.util.Collection;
 
@@ -30,4 +31,13 @@ public interface TournamentDao {
    * @return the added tournament
    */
   Tournament add(TournamentCreateDto tournament);
+
+  /**
+   * Get a tournament by its ID from the persistent data store.
+   *
+   * @param id the ID of the tournament to get
+   * @return the tournament
+   * @throws NotFoundException if the tournament with the given ID does not exist in the persistent data store
+   */
+  Tournament getTournamentDetailsById(long id) throws NotFoundException;
 }

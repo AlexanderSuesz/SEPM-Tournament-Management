@@ -3,6 +3,7 @@ package at.ac.tuwien.sepr.assignment.individual.persistence.impl;
 import at.ac.tuwien.sepr.assignment.individual.entity.Standing;
 import at.ac.tuwien.sepr.assignment.individual.exception.ConflictException;
 import at.ac.tuwien.sepr.assignment.individual.exception.FatalException;
+import at.ac.tuwien.sepr.assignment.individual.exception.NotFoundException;
 import at.ac.tuwien.sepr.assignment.individual.persistence.HorseMappedToTournamentDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +14,7 @@ import java.lang.invoke.MethodHandles;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * Provides access functionality to the application's persistent data store regarding the mapping of tournaments to horses.
@@ -25,6 +27,10 @@ public class HorseMappedToTournamentJdbcDao implements HorseMappedToTournamentDa
   private static final String SQL_COUNT_TOURNAMENTS_FOR_HORSE = "SELECT COUNT(*) FROM "
       + TABLE_NAME
       + " WHERE horse_id = ?";
+
+  private static final String SQL_SELECT_BY_TOURNAMENTID = "SELECT * FROM "
+      + TABLE_NAME
+      + " WHERE tournament_id = ?";
 
   private static final String SQL_CHECK_IF_ENTRY_ALREADY_EXISTS = "SELECT COUNT(*) FROM " // should return 1 if the entry already exists and 0 if it doesn't
       + TABLE_NAME
@@ -59,6 +65,22 @@ public class HorseMappedToTournamentJdbcDao implements HorseMappedToTournamentDa
       // This should never happen - the execution of the SQL query caused an exception!!
       throw new FatalException("Failed to count occurrence of new horse to tournament mapping in database", e);
     }
+  }
+
+  @Override
+  public List<Standing> getHorsesInTournament(long tournamentId) throws NotFoundException {
+    LOG.trace("getHorsesInTournament({})", tournamentId);
+    List<Standing> standings;
+    try {
+      standings = jdbcTemplate.query(SQL_SELECT_BY_TOURNAMENTID, this::mapRow, tournamentId);
+    } catch (Exception e) {
+      // This should never happen - the execution of the SQL query caused an exception!!
+      throw new FatalException("Failed to retrieve standings for the horses in this tournament", e);
+    }
+    if (standings.isEmpty()) {
+      throw new NotFoundException("No horses found taking part in this tournament");
+    }
+    return standings;
   }
 
   @Override
@@ -111,8 +133,8 @@ public class HorseMappedToTournamentJdbcDao implements HorseMappedToTournamentDa
     return new Standing()
         .setHorseId(result.getLong("horse_id"))
         .setTournamentId(result.getLong("tournament_id"))
-        .setEntryNumber(result.getLong("entry_number"))
-        .setRoundReached(result.getLong("round_reached"))
+        .setEntryNumber((Long) result.getObject("entry_number"))
+        .setRoundReached((Long) result.getObject("round_reached"))
         ;
   }
 }

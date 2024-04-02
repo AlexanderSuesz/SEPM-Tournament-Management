@@ -2,9 +2,11 @@ package at.ac.tuwien.sepr.assignment.individual.service;
 
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentCreateDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentDetailDto;
+import at.ac.tuwien.sepr.assignment.individual.dto.TournamentDetailParticipantDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentListDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentSearchDto;
 import at.ac.tuwien.sepr.assignment.individual.entity.Horse;
+import at.ac.tuwien.sepr.assignment.individual.entity.Standing;
 import at.ac.tuwien.sepr.assignment.individual.entity.Tournament;
 import at.ac.tuwien.sepr.assignment.individual.exception.ConflictException;
 import at.ac.tuwien.sepr.assignment.individual.exception.NotFoundException;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Collections;
+import java.util.List;
 import java.util.stream.Stream;
 
 /**
@@ -77,5 +80,32 @@ public class TournamentServiceImpl implements TournamentService {
       horseMappedToTournamentDao.add(tournament.participants()[i].id(), newlyAddedTournament.getId());
     }
     return mapper.entityToDetailDto(newlyAddedTournament, horses);
+  }
+
+  @Override
+  public TournamentDetailDto getTournamentDetailsById(long id) throws NotFoundException {
+    LOG.trace("getTournamentDetailsById({})", id);
+    Tournament tournamentEntity = tournamentDao.getTournamentDetailsById(id);
+    LOG.debug("retrieved the following tournament entry for the tournament id {}: ({})", id, tournamentEntity);
+    List<Standing> horseStandings = horseMappedToTournamentDao.getHorsesInTournament(id);
+    LOG.debug("retrieved the following horse to tournament mapping for the tournament id {}: ({})", id, horseStandings);
+    TournamentDetailParticipantDto[] participants = new TournamentDetailParticipantDto[horseStandings.size()];
+    for (int i = 0; i < horseStandings.size(); i++) {
+      Horse horse = horseDao.getById(horseStandings.get(i).getHorseId());
+      participants[i] = new TournamentDetailParticipantDto(
+          horse.getId(),
+          horse.getName(),
+          horse.getDateOfBirth(),
+          horseStandings.get(i).getEntryNumber(),
+          horseStandings.get(i).getRoundReached()
+          );
+    }
+    return new TournamentDetailDto(
+      tournamentEntity.getId(),
+      tournamentEntity.getName(),
+      tournamentEntity.getStartDate(),
+      tournamentEntity.getEndDate(),
+      participants
+    );
   }
 }

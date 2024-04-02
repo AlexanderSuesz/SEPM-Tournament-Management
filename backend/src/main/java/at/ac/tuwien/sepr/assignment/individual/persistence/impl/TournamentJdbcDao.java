@@ -4,6 +4,7 @@ import at.ac.tuwien.sepr.assignment.individual.dto.TournamentCreateDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentSearchDto;
 import at.ac.tuwien.sepr.assignment.individual.entity.Tournament;
 import at.ac.tuwien.sepr.assignment.individual.exception.FatalException;
+import at.ac.tuwien.sepr.assignment.individual.exception.NotFoundException;
 import at.ac.tuwien.sepr.assignment.individual.persistence.TournamentDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +21,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Provides access functionality to the application's persistent data store regarding tournaments.
@@ -41,6 +43,8 @@ public class TournamentJdbcDao implements TournamentDao {
       + "     )"
       + " ORDER BY t.start_date DESC"; // orders the resulting tournaments by their descending start date
 
+  private static final String SQL_SELECT_BY_ID = "SELECT * FROM " + TABLE_NAME + " WHERE id = ?";
+
   private static final String SQL_INSERT_TOURNAMENT = "INSERT INTO "
       + TABLE_NAME
       + " (name, start_date, end_date) VALUES (?, ?, ?)";
@@ -54,6 +58,26 @@ public class TournamentJdbcDao implements TournamentDao {
       JdbcTemplate jdbcTemplate) {
     this.jdbcTemplate = jdbcTemplate;
     this.jdbcNamed = jdbcNamed;
+  }
+
+  @Override
+  public Tournament getTournamentDetailsById(long id) throws NotFoundException {
+    LOG.trace("getTournamentDetailsById({})", id);
+    List<Tournament> tournaments;
+    try {
+      tournaments = jdbcTemplate.query(SQL_SELECT_BY_ID, this::mapRow, id);
+    } catch (Exception e) {
+      // This should never happen - the execution of the SQL query caused an exception!!
+      throw new FatalException("Failed to retrieve tournament", e);
+    }
+    if (tournaments.isEmpty()) {
+      throw new NotFoundException("Tournament not found");
+    }
+    if (tournaments.size() > 1) {
+      // This should never happen - more than one tournament found with this id!!
+      throw new FatalException("Too many tournaments with this ID found");
+    }
+    return tournaments.getFirst();
   }
 
   @Override
