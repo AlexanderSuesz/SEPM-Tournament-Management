@@ -1,6 +1,7 @@
 import {Component, Input} from '@angular/core';
 import {TournamentDetailParticipantDto, TournamentStandingsTreeDto} from "../../../../dto/tournament";
 import {of} from "rxjs";
+import {formatIsoDate} from "../../../../util/date-helper";
 
 enum TournamentBranchPosition {
   FINAL_WINNER,
@@ -47,7 +48,7 @@ export class TournamentStandingsBranchComponent {
 
   public formatParticipant(participant: TournamentDetailParticipantDto | null): string {
     return participant
-        ? `${participant.name} (${participant.dateOfBirth.toLocaleDateString()})`
+        ? `${participant.name} (${formatIsoDate(participant.dateOfBirth)})`
         : "";
   }
 }
