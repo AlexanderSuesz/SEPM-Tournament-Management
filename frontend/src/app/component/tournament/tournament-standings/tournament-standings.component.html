@@ -1,11 +1,16 @@
 <h1 class="display-1">Standings of {{standings?.name}}</h1>
 
+<!-- *ngIf="standings" displays this component only hen standings is set tto true -->
+<!-- [treeBranch]="standings.tree" passes the tree structure of this tournament to the child -->
+<!-- [allParticipants]="standings.participants" passes the participants of this tournament to the child -->
+<!-- (updateThisTreeBranchChangedEvent)="updateTree($event.tree)" receives an updated tree structure from the child -->
 <form #form="ngForm" (submit)="submit(form)">
   <app-tournament-standings-branch
     *ngIf="standings"
     [treeBranch]="standings.tree"
     [allParticipants]="standings.participants"
-    ></app-tournament-standings-branch>
+    (updateThisTreeBranchChangedEvent)="updateTree($event.tree)"
+  ></app-tournament-standings-branch>
 
   <div class="d-flex justify-content-end mb-3">
     <button type="button"

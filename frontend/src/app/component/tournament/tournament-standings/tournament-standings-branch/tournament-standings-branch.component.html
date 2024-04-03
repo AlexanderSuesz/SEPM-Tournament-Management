@@ -5,8 +5,15 @@
 
   <div class="d-flex flex-column me-3" *ngIf="treeBranch?.branches">
     <!-- Earlier round(s) -->
+    <!-- [thisRoundAlreadyHasWinner]="disableChildNodes" will mark the autocomplete component disabled if the parent has a participant -->
+    <!-- (updateThisTreeBranchChangedEvent)="updateLeftBranch($event.tree, $event.pos)" when the left child branch is updated the updateLeftBranch function is called -->
+    <!-- [branchPosition]="TournamentBranchPosition.UPPER" tells the child branch that it is an UPPER branch (left branch of a binary tree) -->
+    <!-- [treeBranch]="treeBranch?.branches?.[0]" passes the left tree branch of the parent node to the child node -->
+    <!-- [allParticipants]="allParticipants" passes all participants to the child (used for auto complete suggestions) -->
     <div class="pt-3">
       <app-tournament-standings-branch
+        [thisRoundAlreadyHasWinner]="disableChildNodes"
+        (updateThisTreeBranchChangedEvent)="updateLeftBranch($event.tree, $event.pos)"
         [branchPosition]="TournamentBranchPosition.UPPER"
         [treeBranch]="treeBranch?.branches?.[0]"
         [allParticipants]="allParticipants"
@@ -14,6 +21,8 @@
     </div>
     <div class="pb-3">
       <app-tournament-standings-branch
+        [thisRoundAlreadyHasWinner]="disableChildNodes"
+        (updateThisTreeBranchChangedEvent)="updateRightBranch($event.tree, $event.pos)"
         [branchPosition]="TournamentBranchPosition.LOWER"
         [treeBranch]="treeBranch?.branches?.[1]"
         [allParticipants]="allParticipants"
@@ -21,11 +30,18 @@
     </div>
   </div>
 
+  <!-- [suggestions]="suggestions" sends the suggestions to the child (autocomplete) -->
+  <!-- [(ngModel)]="treeBranch.thisParticipant" retrieves the selected element from the child (autocomplete) and saves it in treeBranch.thisParticipant -->
+  <!-- [formatModel]="formatParticipant" retrieves the inserted element from the child (autocomplete) -->
+  <!-- (ngModelChange)="participantChanged()" if a change occurred in the child (autocomplete) then the method participantChanged() will be called in the parent -->
+  <!-- [disabled]="thisRoundAlreadyHasWinner" no change can be performed if this boolean flag is set to true-->
   <app-autocomplete
     textInputClass="form-control"
     valueNeedsToMatchSuggestion="true"
     [suggestions]="suggestions"
     [(ngModel)]="treeBranch.thisParticipant"
     [formatModel]="formatParticipant"
+    (ngModelChange)="participantChanged()"
+    [disabled]="thisRoundAlreadyHasWinner"
     ></app-autocomplete>
 </div>
