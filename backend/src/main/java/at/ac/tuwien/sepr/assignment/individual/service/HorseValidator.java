@@ -130,10 +130,14 @@ public class HorseValidator {
     List<String> validationErrors = new ArrayList<>();
     if (breed == null) {
       validationErrors.add("Name of the horse breed is too short"); // can't check for the rest if is null
+      return validationErrors;
     } else if (breed.length() > 32) {
       validationErrors.add("Name of the horse breed is too long");
     } else if (breed.length() <= 0) {
       validationErrors.add("Name of the horse breed is too short");
+    }
+    if (!breed.matches("^[0-9a-zA-Z _]+")) {
+      validationErrors.add("The breed name can only consist of numbers, letters and the special characters {' ', '_'}");
     }
     return validationErrors;
   }
@@ -147,6 +151,9 @@ public class HorseValidator {
       validationErrors.add("Horse name is too short");
     } else if (name.length() > 100) {
       validationErrors.add("Horse name is too long");
+    }
+    if (!name.matches("^[0-9a-zA-Z _]+")) {
+      validationErrors.add("The horse name can only consist of numbers, letters and the special characters {' ', '_'}");
     }
     return validationErrors;
   }

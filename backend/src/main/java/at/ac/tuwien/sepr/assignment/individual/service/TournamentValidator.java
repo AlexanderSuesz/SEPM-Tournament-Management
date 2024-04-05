@@ -59,17 +59,10 @@ public class TournamentValidator {
     LOG.trace("validateForInsert({})", tournament);
     List<String> validationErrors = new ArrayList<>();
     validationErrors.addAll(validateName(tournament.name()));
+    validationErrors.addAll(validateDates(tournament.startDate(), tournament.endDate()));
     boolean validStartDate = true;
     if (tournament.startDate() == null) {
-      validStartDate = false;
-      validationErrors.add("No start date was picked for the tournament");
-    }
-    if (tournament.endDate() == null) {
-      validationErrors.add("No end date was picked for the tournament");
-    }
-    if (tournament.startDate() != null && tournament.endDate() != null
-        && tournament.startDate().isAfter(tournament.endDate())) {
-      validationErrors.add("start date of tournament needs to be before its end date");
+      validStartDate = false; // will skip the horse checks for which the date is needed
     }
     if (tournament.participants() == null || tournament.participants().length != 8) {
       validationErrors.add("A tournament must have exactly 8 horses");
@@ -113,6 +106,25 @@ public class TournamentValidator {
     } else if (name.length() > 100) {
       validationErrors.add("Tournament name is too long");
     }
+    if (!name.matches("^[0-9a-zA-Z _]+")) {
+      validationErrors.add("The tournament name can only consist of numbers, letters and the special characters {' ', '_'}");
+    }
     return validationErrors;
   }
+
+  private List<String> validateDates(LocalDate startDate, LocalDate endDate) {
+    List<String> validationErrors = new ArrayList<>();
+    if (startDate == null) {
+      validationErrors.add("No start date was picked for the tournament");
+    }
+    if (endDate == null) {
+      validationErrors.add("No end date was picked for the tournament");
+    }
+    if (startDate != null && endDate != null
+        && startDate.isAfter(endDate)) {
+      validationErrors.add("start date of tournament needs to be before its end date");
+    }
+    return validationErrors;
+  }
+
 }
