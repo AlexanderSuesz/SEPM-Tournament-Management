@@ -52,18 +52,10 @@ public class TournamentEndpoint {
     LOG.debug("request parameters: {}", searchParameters);
     try {
       return service.search(searchParameters);
-    } catch (ValidationException e) {
-      // ValidationException will be rethrown to be handled by the ApplicationExceptionHandler
-      throw e;
     } catch (FatalException e) {
       HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
       logClientError(status, "Couldn't execute database query with the following search parameters (" + searchParameters + ")", e);
       throw new ResponseStatusException(status, e.getMessage(), e);
-    } catch (Exception e) {
-      HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-      logClientError(status, "An unexpected error occurred when searching for tournaments with these search parameters (" + searchParameters + ")", e);
-      // We don't display the error message of the unexpected Exception e to the user since it could possibly display too much information to the user.
-      throw new ResponseStatusException(status, "An unexpected error occurred", e);
     }
   }
 
@@ -88,11 +80,6 @@ public class TournamentEndpoint {
       HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
       logClientError(status, "There was an error when retrieving the data of the tournament with id " + id + " from the database", e);
       throw new ResponseStatusException(status, e.getMessage(), e);
-    } catch (Exception e) {
-      HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-      logClientError(status, "There was an error when retrieving the data of the tournament with id " + id + " from the database", e);
-      // We don't display the error message of the unexpected Exception e to the user since it could possibly display too much information to the user.
-      throw new ResponseStatusException(status, "An unexpected error occurred", e);
     }
   }
 
@@ -110,9 +97,6 @@ public class TournamentEndpoint {
     LOG.debug("Body of request:\n{}", toAdd);
     try {
       return service.add(toAdd);
-    } catch (ValidationException e) {
-      // ValidationException will be rethrown to be handled by the ApplicationExceptionHandler
-      throw e;
     } catch (ConflictException e) {
       HttpStatus status = HttpStatus.CONFLICT;
       logClientError(status, "There was a conflict when adding the tournament (a horse which takes part in the tournament doesn't exist)", e);
@@ -121,11 +105,6 @@ public class TournamentEndpoint {
       HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
       logClientError(status, "There was an error when adding the tournament " + toAdd + " to the database", e);
       throw new ResponseStatusException(status, e.getMessage(), e);
-    } catch (Exception e) {
-      HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-      logClientError(status, "An unexpected error occurred when adding the tournament " + toAdd + " to the database", e);
-      // We don't display the error message of the unexpected Exception e to the user since it could possibly display too much information to the user.
-      throw new ResponseStatusException(status, "An unexpected error occurred", e);
     }
   }
 
