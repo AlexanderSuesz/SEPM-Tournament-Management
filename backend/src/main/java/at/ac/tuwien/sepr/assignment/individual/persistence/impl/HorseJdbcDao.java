@@ -163,19 +163,19 @@ public class HorseJdbcDao implements HorseDao {
         // This should never happen - the new horse should be retrievable from the database!!
         throw new FatalException("Failed to retrieve identity of newly added horse", e);
       }
-        if (lastInsertedId != null) {
-          try {
-            return getById(lastInsertedId.longValue());
-          } catch (NotFoundException e) {
-            // This should never happen - the new horse should be retrievable from the database!!
-            throw new FatalException("Failed to retrieve newly added horse", e);
-          }
-        } else {
+      if (lastInsertedId != null) {
+        try {
+          return getById(lastInsertedId.longValue());
+        } catch (NotFoundException e) {
           // This should never happen - the new horse should be retrievable from the database!!
-          throw new FatalException("Failed to retrieve newly added horse");
+          throw new FatalException("Failed to retrieve newly added horse", e);
         }
+      } else {
+        // This should never happen - the new horse should be retrievable from the database!!
+        throw new FatalException("Failed to retrieve newly added horse");
       }
     }
+  }
 
   @Override
   public void deleteById(long id) throws NotFoundException {
