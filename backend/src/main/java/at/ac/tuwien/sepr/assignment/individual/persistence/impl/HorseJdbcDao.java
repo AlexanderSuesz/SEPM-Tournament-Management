@@ -11,6 +11,8 @@ import at.ac.tuwien.sepr.assignment.individual.persistence.HorseDao;
 import at.ac.tuwien.sepr.assignment.individual.type.Sex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -99,7 +101,7 @@ public class HorseJdbcDao implements HorseDao {
     List<Horse> horses;
     try {
       horses = jdbcTemplate.query(SQL_SELECT_BY_ID, this::mapRow, id);
-    } catch (Exception e) {
+    } catch (DataAccessException e) {
       // This should never happen - the execution of the SQL query caused an exception!!
       throw new FatalException("Failed to retrieve horse", e);
     }
@@ -142,7 +144,7 @@ public class HorseJdbcDao implements HorseDao {
           return ps;
         }, keyHolder);
       }
-    } catch (Exception e) {
+    } catch (DataAccessException e) {
       // This should never happen - the execution of the SQL query caused an exception!!
       throw new FatalException("Failed to add horse", e);
     }
@@ -154,20 +156,26 @@ public class HorseJdbcDao implements HorseDao {
       // This should never happen - no horse was added!!
       throw new FatalException("No horse was added");
     } else {
+      Number lastInsertedId;
       try {
-        Number lastInsertedId = keyHolder.getKey();
+        lastInsertedId = keyHolder.getKey();
+      } catch (InvalidDataAccessApiUsageException e) {
+        // This should never happen - the new horse should be retrievable from the database!!
+        throw new FatalException("Failed to retrieve identity of newly added horse", e);
+      }
         if (lastInsertedId != null) {
-          return getById(lastInsertedId.longValue());
+          try {
+            return getById(lastInsertedId.longValue());
+          } catch (NotFoundException e) {
+            // This should never happen - the new horse should be retrievable from the database!!
+            throw new FatalException("Failed to retrieve newly added horse", e);
+          }
         } else {
           // This should never happen - the new horse should be retrievable from the database!!
           throw new FatalException("Failed to retrieve newly added horse");
         }
-      } catch (Exception e) {
-        // This should never happen - the new horse should be retrievable from the database!!
-        throw new FatalException("Failed to retrieve newly added horse", e);
       }
     }
-  }
 
   @Override
   public void deleteById(long id) throws NotFoundException {
@@ -176,7 +184,7 @@ public class HorseJdbcDao implements HorseDao {
     int deleted;
     try {
       deleted = jdbcTemplate.update(SQL_DELETE_BY_ID, id);
-    } catch (Exception e) {
+    } catch (DataAccessException e) {
       // This should never happen - the execution of the SQL query caused an exception!!
       throw new FatalException("Failed to delete horse", e);
     }
@@ -200,9 +208,9 @@ public class HorseJdbcDao implements HorseDao {
     params.registerSqlType("sex", Types.VARCHAR);
     try {
       return jdbcNamed.query(query, params, this::mapRow);
-    } catch (Exception e) {
+    } catch (DataAccessException e) {
       // This should never happen - the execution of the SQL query caused an exception!!
-      throw new FatalException("Couldn't search for horses");
+      throw new FatalException("Couldn't search for horses", e);
     }
   }
 
@@ -226,9 +234,9 @@ public class HorseJdbcDao implements HorseDao {
                 horse.weight(),
                 horse.breed().id(),
                 horse.id());
-      } catch (Exception e) {
+      } catch (DataAccessException e) {
         // This should never happen - the execution of the SQL query caused an exception!!
-        throw new FatalException("Couldn't update the horse " + horse.name());
+        throw new FatalException("Couldn't update the horse " + horse.name(), e);
       }
     } else {
       try {
@@ -239,9 +247,9 @@ public class HorseJdbcDao implements HorseDao {
                 horse.height(),
                 horse.weight(),
                 horse.id());
-      } catch (Exception e) {
+      } catch (DataAccessException e) {
         // This should never happen - the execution of the SQL query caused an exception!!
-        throw new FatalException("Couldn't update the horse " + horse.name());
+        throw new FatalException("Couldn't update the horse " + horse.name(), e);
       }
     }
     if (updated <= 0) {
@@ -251,7 +259,7 @@ public class HorseJdbcDao implements HorseDao {
       return getById(horse.id());
     } catch (NotFoundException e) {
       // This should never happen - couldn't find updated horse!!
-      throw new FatalException("Couldn't retrieve updated horse " + horse.name());
+      throw new FatalException("Couldn't retrieve updated horse " + horse.name(), e);
     }
   }
 

@@ -8,6 +8,7 @@ import at.ac.tuwien.sepr.assignment.individual.exception.NotFoundException;
 import at.ac.tuwien.sepr.assignment.individual.persistence.TournamentDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -66,7 +67,7 @@ public class TournamentJdbcDao implements TournamentDao {
     List<Tournament> tournaments;
     try {
       tournaments = jdbcTemplate.query(SQL_SELECT_BY_ID, this::mapRow, id);
-    } catch (Exception e) {
+    } catch (DataAccessException e) {
       // This should never happen - the execution of the SQL query caused an exception!!
       throw new FatalException("Failed to retrieve tournament", e);
     }
@@ -90,9 +91,9 @@ public class TournamentJdbcDao implements TournamentDao {
     var params = new BeanPropertySqlParameterSource(searchParameters);
     try {
       return jdbcNamed.query(query, params, this::mapRow);
-    } catch (Exception e) {
+    } catch (DataAccessException e) {
       // This should never happen - the execution of the SQL query caused an exception!!
-      throw new FatalException("Couldn't search for tournaments");
+      throw new FatalException("Couldn't search for tournaments", e);
     }
   }
 
@@ -109,7 +110,7 @@ public class TournamentJdbcDao implements TournamentDao {
         ps.setObject(3, tournament.endDate());
         return ps;
       }, keyHolder);
-    } catch (Exception e) {
+    } catch (DataAccessException e) {
       // This should never happen - the execution of the SQL query caused an exception!!
       throw new FatalException("Failed to add tournament", e);
     }

@@ -6,6 +6,7 @@ import at.ac.tuwien.sepr.assignment.individual.exception.FatalException;
 import at.ac.tuwien.sepr.assignment.individual.persistence.BreedDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -46,9 +47,9 @@ public class BreedJdbcDao implements BreedDao {
     LOG.trace("allBreeds()");
     try {
       return jdbcTemplate.query(SQL_ALL, this::mapRow);
-    } catch (Exception e) {
+    } catch (DataAccessException e) {
       // This should never happen - the execution of the SQL query caused an exception!!
-      throw new FatalException("Couldn't retrieve all breeds");
+      throw new FatalException("Couldn't retrieve all breeds", e);
     }
   }
 
@@ -57,9 +58,9 @@ public class BreedJdbcDao implements BreedDao {
     LOG.trace("findBreedsById({})", breedIds);
     try {
       return jdbcTemplate.query(SQL_FIND_BY_IDS, Map.of("ids", breedIds), this::mapRow);
-    } catch (Exception e) {
+    } catch (DataAccessException e) {
       // This should never happen - the execution of the SQL query caused an exception!!
-      throw new FatalException("Couldn't retrieve chosen breeds");
+      throw new FatalException("Couldn't retrieve chosen breeds", e);
     }
   }
 
@@ -72,9 +73,9 @@ public class BreedJdbcDao implements BreedDao {
     }
     try {
       return jdbcTemplate.query(query, new BeanPropertySqlParameterSource(searchParams), this::mapRow);
-    } catch (Exception e) {
+    } catch (DataAccessException e) {
       // This should never happen - the execution of the SQL query caused an exception!!
-      throw new FatalException("Couldn't retrieve chosen breeds");
+      throw new FatalException("Couldn't retrieve chosen breeds", e);
     }
   }
 
