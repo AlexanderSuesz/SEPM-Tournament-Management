@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -79,6 +80,38 @@ public class TournamentEndpoint {
     } catch (FatalException e) {
       HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
       logClientError(status, "There was an error when retrieving the data of the tournament with id " + id + " from the database", e);
+      throw new ResponseStatusException(status, e.getMessage(), e);
+    }
+  }
+
+  /**
+   * Handles HTTP PUT requests to update details of a specific tournament.
+   *
+   * @param tournamentDetails the new details of the tournament which should replace the old details
+   * @return a TournamentDetailDto representing the current details of the tournament
+   * @throws NotFoundException if the tournament is not found
+   * @throws ConflictException if provided details aren't compatible with current data in persistence storage (e.g. unexpected entry number for a horse)
+   */
+  @PutMapping("/standings/{id}")
+  public TournamentDetailDto updateTournamentStandings(@RequestBody TournamentDetailDto tournamentDetails) throws ValidationException, NotFoundException,
+      ConflictException {
+    LOG.info("PUT " + BASE_PATH + "/standings/{}", tournamentDetails.id());
+    LOG.debug("Body of request: [{}, {}, {}, {}, {}]", tournamentDetails.id(), tournamentDetails.name(), tournamentDetails.startDate(),
+        tournamentDetails.endDate(), tournamentDetails.participants());
+    try {
+      return service.updateTournament(tournamentDetails);
+    } catch (NotFoundException e) {
+      HttpStatus status = HttpStatus.NOT_FOUND;
+      logClientError(status, "No tournament with the id " + tournamentDetails.id() + " found in the database", e);
+      throw new ResponseStatusException(status, e.getMessage(), e);
+    } catch (ConflictException e) {
+      HttpStatus status = HttpStatus.CONFLICT;
+      logClientError(status, "There was a conflict when adding the tournament (a horse which takes part in the tournament is in conflict with the "
+          + "existing horses in the database)", e);
+      throw new ResponseStatusException(status, e.getMessage(), e);
+    } catch (FatalException e) {
+      HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+      logClientError(status, "There was an error when updating the tournament with the new data (" + tournamentDetails + ")", e);
       throw new ResponseStatusException(status, e.getMessage(), e);
     }
   }

@@ -42,4 +42,14 @@ public interface TournamentService {
    * @throws NotFoundException if no tournament with this id exists
    */
   TournamentDetailDto getTournamentDetailsById(long id) throws NotFoundException;
+
+  /**
+   * Updates an already existing tournament with the given tournament details.
+   *
+   * @param tournament the new details of the tournament which should replace the old details of the tournament
+   * @return returns the current details of the tournament
+   * @throws NotFoundException if this tournament was not found
+   * @throws ConflictException if horses provided in tournament details don't match with the current details of this tournament (not expected horses, etc.)
+   */
+  TournamentDetailDto updateTournament(TournamentDetailDto tournament) throws ValidationException, NotFoundException, ConflictException;
 }
