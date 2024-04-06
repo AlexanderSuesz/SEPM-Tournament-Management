@@ -1,13 +1,18 @@
 package at.ac.tuwien.sepr.assignment.individual.service;
 
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentCreateDto;
+import at.ac.tuwien.sepr.assignment.individual.dto.TournamentDetailDto;
+import at.ac.tuwien.sepr.assignment.individual.dto.TournamentDetailParticipantDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentSearchDto;
+import at.ac.tuwien.sepr.assignment.individual.dto.TournamentStandingsTreeDto;
 import at.ac.tuwien.sepr.assignment.individual.exception.ValidationException;
+import at.ac.tuwien.sepr.assignment.individual.mapper.TournamentMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.lang.invoke.MethodHandles;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -96,6 +101,169 @@ public class TournamentValidator {
     }
   }
 
+  /**
+   * Validates the provided tournament details before performing an update operation (updating a tournament in the persistence storage).
+   *
+   * @param tournament the tournament to validate
+   * @throws ValidationException if validation fails due to invalid data
+   */
+  public void validateForUpdate(TournamentDetailDto tournament) throws ValidationException {
+    LOG.trace("validateForUpdate({})", tournament);
+    List<String> validationErrors = new ArrayList<>();
+    validationErrors.addAll(validateName(tournament.name()));
+    validationErrors.addAll(validateDates(tournament.startDate(), tournament.endDate()));
+    if (tournament.participants() == null || tournament.participants().length > 8) {
+      validationErrors.add("A tournament can only have between 0 and 8 horses currently competing against each other");
+    }
+    if (tournament.participants() != null) { // tournament.participants().length can only be accessed if horses are not null
+      ArrayList<Long> horsesIdComparison = new ArrayList<>(); // used to check if the same horse was added multiple times to the tournament
+      ArrayList<Long> horsesEntryNumberComparison = new ArrayList<>(); // used to check if the same entry number was added multiple times to the tournament
+      int horsesInRound1 = 0;
+      int horsesInRound2 = 0;
+      int horsesInRound3 = 0;
+      int horsesInRound4 = 0;
+      for (int i = 0; i < tournament.participants().length; i++) {
+        if (tournament.participants()[i] == null) {
+          validationErrors.add("A horse containing no data was provided");
+        } else {
+          if (horsesIdComparison.contains(tournament.participants()[i].horseId())) {
+            validationErrors.add("The same horse " + tournament.participants()[i].name() + " appears multiple times in this tournament");
+          }
+          if (tournament.participants()[i].entryNumber() != null && (tournament.participants()[i].entryNumber() < 0
+              || tournament.participants()[i].entryNumber() > 7)) {
+            validationErrors.add("The entry number for horses can only be between 0 and 7");
+          }
+          if (tournament.participants()[i].roundReached() != null && (tournament.participants()[i].roundReached() < 1
+              || tournament.participants()[i].roundReached() > 4)) {
+            validationErrors.add("A round must be between 1 and 4");
+          }
+          if (tournament.participants()[i].roundReached() != null) {
+            switch ((int) tournament.participants()[i].roundReached().longValue()) {
+              case 1:
+                horsesInRound1++;
+                break;
+              case 2:
+                horsesInRound2++;
+                break;
+              case 3:
+                horsesInRound3++;
+                break;
+              case 4:
+                horsesInRound4++;
+                break;
+              default:
+                validationErrors.add("An invalid round number " + tournament.participants()[i].roundReached() + " was found");
+            }
+          }
+          horsesIdComparison.add(tournament.participants()[i].horseId());
+          horsesEntryNumberComparison.add(tournament.participants()[i].entryNumber());
+        }
+      }
+      if (horsesInRound1 < 0 || horsesInRound1 > 8) {
+        validationErrors.add("There can only be 8 horses in round 1");
+      }
+      if (horsesInRound2 < 0 || horsesInRound2 > 4) {
+        validationErrors.add("There can only be 4 horses in round 2");
+      }
+      if (horsesInRound3 < 0 || horsesInRound3 > 2) {
+        validationErrors.add("There can only be 2 horses in round 3");
+      }
+      if (horsesInRound4 < 0 || horsesInRound4 > 1) {
+        validationErrors.add("There can only be 1 horse in round 4");
+      }
+    }
+    TournamentStandingsTreeDto tree = new TournamentMapper().tournamentDetailsDtoToTournamentStandingTree(tournament);
+    validationErrors.addAll(validateTreeStructure(4, 0, 7, tree));
+    if (!validationErrors.isEmpty()) {
+      throw new ValidationException("Validation of the tournament failed", validationErrors);
+    }
+  }
+
+  private List<String> validateTreeStructure(long curRound, long startEntryNumber, long endEntryNumber, TournamentStandingsTreeDto tournamentTree) {
+    List<String> validationErrors = new ArrayList<>();
+    if (curRound <= 1) {
+      return validationErrors;
+    }
+    if (tournamentTree.getThisParticipant() != null) {
+      if (tournamentTree.getThisParticipant().entryNumber() < startEntryNumber || tournamentTree.getThisParticipant().entryNumber() > endEntryNumber) {
+        validationErrors.add("The horse " + tournamentTree.getThisParticipant().name() + " is in an invalid position in the tree (opposite site of expected)");
+        LOG.debug("The horse " + tournamentTree.getThisParticipant().horseId() + " has the entry number " + tournamentTree.getThisParticipant().entryNumber()
+            + " and it's number is not between [" + startEntryNumber + ", " + endEntryNumber + "]");
+      }
+      if (tournamentTree.getBranches().getFirst().getThisParticipant() != null && tournamentTree.getBranches().getLast().getThisParticipant() != null
+          && tournamentTree.getBranches().getFirst().getThisParticipant().horseId() != tournamentTree.getThisParticipant().horseId()
+          && tournamentTree.getBranches().getLast().getThisParticipant().horseId() != tournamentTree.getThisParticipant().horseId()) {
+
+        validationErrors.add("Unexpected child horses for the winner " + tournamentTree.getThisParticipant().name() + " of the "
+            + tournamentTree.getThisParticipant().roundReached() + " round");
+      }
+      if (tournamentTree.getBranches().getFirst().getThisParticipant() == null && tournamentTree.getBranches().getLast().getThisParticipant() == null) {
+        validationErrors.add("The winning horse " + tournamentTree.getThisParticipant().name() + " of round "
+            + tournamentTree.getThisParticipant().roundReached() + " had no opponent in the previous round");
+      }
+    }
+    long split = (endEntryNumber - startEntryNumber) / 2 + startEntryNumber;
+    validationErrors.addAll(validateTreeStructure(curRound - 1, 0, split,
+        tournamentTree.getBranches().get(0)));
+    validationErrors.addAll(validateTreeStructure(curRound - 1, split + 1, endEntryNumber,
+        tournamentTree.getBranches().get(1)));
+    return validationErrors;
+  }
+
+  /**
+   * Checks if the current tree curTree compatible is with the new tree structure newTree
+   */
+  public void validateTreeCompability(TournamentStandingsTreeDto newTree, TournamentStandingsTreeDto curTree) throws ValidationException {
+    List<String> validationErrors = new ArrayList<>();
+    validationErrors.addAll(treeNodeComperator(newTree, curTree));
+    if (!validationErrors.isEmpty()) {
+      throw new ValidationException("Validation of compatibility of the the new with the current tree structure failed", validationErrors);
+    }
+  }
+
+  private List<String> treeNodeComperator(TournamentStandingsTreeDto newTreeNode, TournamentStandingsTreeDto curTreeNode) {
+    List<String> validationErrors = new ArrayList<>();
+    if (curTreeNode.getBranches() == null) {
+      return validationErrors;
+    }
+    /*if (curTreeNode.getBranches().getFirst().getBranches() == null) { // At depth round 2 is our last check since we can still view the root of this tree
+      if ((curTreeNode.getThisParticipant() == null && newTreeNode.getThisParticipant() == null)
+          || (curTreeNode.getThisParticipant() != null && newTreeNode.getThisParticipant() != null
+          && curTreeNode.getThisParticipant().horseId() == newTreeNode.getThisParticipant().horseId())) {
+        return validationErrors;
+      } else {
+        LOG.debug("Check 1 failed");
+        validationErrors.add("Found an inconsistency where horses of previously completed rounds don't match the already existing standing");
+        return validationErrors;
+      }
+    }*/
+    if (curTreeNode.getThisParticipant() != null) {
+      TournamentDetailParticipantDto childOfLeftBranchNew = newTreeNode.getBranches().getFirst().getThisParticipant();
+      TournamentDetailParticipantDto childOfRightBranchNew = newTreeNode.getBranches().getLast().getThisParticipant();
+      TournamentDetailParticipantDto childOfLeftBranchCur = curTreeNode.getBranches().getFirst().getThisParticipant();
+      TournamentDetailParticipantDto childOfRightBranchCur = curTreeNode.getBranches().getLast().getThisParticipant();
+      if (
+          !(
+              (childOfLeftBranchCur == null && childOfLeftBranchNew == null)
+                  || (childOfLeftBranchCur != null && childOfLeftBranchNew != null && childOfLeftBranchCur.horseId() == childOfLeftBranchNew.horseId())
+          )
+      ) {
+        validationErrors.add("Found an inconsistency where horses of previously completed rounds don't match the already existing standing");
+      }
+      if (
+          !(
+              (childOfRightBranchCur == null && childOfRightBranchNew == null)
+                  || (childOfRightBranchCur != null && childOfRightBranchNew != null && childOfRightBranchCur.horseId() == childOfRightBranchNew.horseId())
+          )
+      ) {
+        validationErrors.add("Found an inconsistency where horses of previously completed rounds don't match the already existing standing");
+      }
+    }
+    validationErrors.addAll(treeNodeComperator(newTreeNode.getBranches().getFirst(), curTreeNode.getBranches().getFirst()));
+    validationErrors.addAll(treeNodeComperator(newTreeNode.getBranches().getLast(), curTreeNode.getBranches().getLast()));
+    return validationErrors;
+  }
+
   private List<String> validateName(String name) {
     List<String> validationErrors = new ArrayList<>();
     if (name == null) {
@@ -107,7 +275,7 @@ public class TournamentValidator {
       validationErrors.add("Tournament name is too long");
     }
     if (!name.matches("^[0-9a-zA-Z _]+")) {
-      validationErrors.add("The tournament name can only consist of numbers, letters and the special characters {' ', '_'}");
+      validationErrors.add("The tournament name can only consist of numbers, letters and the special characters space and underscore");
     }
     return validationErrors;
   }
