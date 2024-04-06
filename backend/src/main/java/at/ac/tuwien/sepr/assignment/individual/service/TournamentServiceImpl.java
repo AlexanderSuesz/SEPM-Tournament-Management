@@ -8,6 +8,7 @@ import at.ac.tuwien.sepr.assignment.individual.dto.TournamentSearchDto;
 import at.ac.tuwien.sepr.assignment.individual.entity.Horse;
 import at.ac.tuwien.sepr.assignment.individual.entity.Standing;
 import at.ac.tuwien.sepr.assignment.individual.entity.Tournament;
+import at.ac.tuwien.sepr.assignment.individual.dto.TournamentStandingsTreeDto;
 import at.ac.tuwien.sepr.assignment.individual.exception.ConflictException;
 import at.ac.tuwien.sepr.assignment.individual.exception.NotFoundException;
 import at.ac.tuwien.sepr.assignment.individual.exception.ValidationException;
@@ -20,6 +21,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
@@ -36,17 +39,19 @@ public class TournamentServiceImpl implements TournamentService {
   private final HorseMappedToTournamentDao horseMappedToTournamentDao;
   private final TournamentMapper mapper;
   private final TournamentValidator validator;
+  private final TournamentMapper tournamentMapper;
 
   public TournamentServiceImpl(TournamentDao tournamentDao,
                                HorseDao horseDao,
                                HorseMappedToTournamentDao horseMappedToTournamentDao,
                                TournamentMapper mapper,
-                               TournamentValidator validator) {
+                               TournamentValidator validator, TournamentMapper tournamentMapper) {
     this.tournamentDao = tournamentDao;
     this.horseDao = horseDao;
     this.horseMappedToTournamentDao = horseMappedToTournamentDao;
     this.mapper = mapper;
     this.validator = validator;
+    this.tournamentMapper = tournamentMapper;
   }
 
   @Override
@@ -107,5 +112,117 @@ public class TournamentServiceImpl implements TournamentService {
       tournamentEntity.getEndDate(),
       participants
     );
+  }
+
+  @Override
+  public TournamentDetailDto updateTournament(TournamentDetailDto tournament) throws ValidationException, NotFoundException, ConflictException {
+    LOG.trace("updateTournament({})", tournament);
+    validator.validateForUpdate(tournament);
+    final Tournament tournamentEntity = tournamentDao.getTournamentDetailsById(tournament.id()); // checks if the tournament doesn't exist (NotFoundException)
+    LOG.debug("The provided tournament exists");
+    Horse[] horses = new Horse[tournament.participants().length];
+
+    // Checks if a horse doesn't exist (ConflictException)
+    for (int i = 0; i < tournament.participants().length; i++) {
+      try {
+        Horse horse = horseDao.getById(tournament.participants()[i].horseId()); // will throw NotFoundException if horse was not found
+        horses[i] = horse;
+      } catch (NotFoundException e) {
+        LOG.debug("horse {} not found", tournament.participants()[i].horseId());
+        throw new ConflictException("Couldn't find horse " + tournament.participants()[i].name() + " because this horse doesn't exist",
+            Collections.singletonList(e.getMessage()));
+      }
+    }
+    List<Standing> horseStandingsInTournament = horseMappedToTournamentDao.getHorsesInTournament(tournament.id());
+    LOG.debug("All provided Horses exist in the database");
+
+    // Checks if horse isn't in tournament
+    for (int i = 0; i < horses.length; i++) {
+      int finalI = i; // need this extra i to use in the lambda expression
+      if (horseStandingsInTournament.stream().noneMatch(horseToTournamentMapping -> horseToTournamentMapping.getHorseId() == horses[finalI].getId()))  {
+        throw new ConflictException("A provided horse isn't part of this tournament", Collections.singletonList("horse not found in mapping"));
+      }
+    }
+    LOG.debug("All provided horses are in the database");
+
+    // For the current horse-tournament-mapping in the db creates an array of horses which are at least in round 1
+    boolean existingStandings = false; // is true if at least one horse exists that is in a round
+    ArrayList<TournamentDetailParticipantDto> participants = new ArrayList<>();
+    for (int i = 0; i < horses.length; i++) {
+      int finalI = i;
+      // Checks if the current horse is in any round
+      Standing standingOfThisHorse = horseStandingsInTournament.stream().filter(mapping -> mapping.getHorseId() == horses[finalI].getId()).toList().getFirst();
+      if (standingOfThisHorse.getRoundReached() != null) {
+        existingStandings = true;
+        participants.add(new TournamentDetailParticipantDto(
+            horses[i].getId(),
+            horses[i].getName(),
+            horses[i].getDateOfBirth(),
+            standingOfThisHorse.getEntryNumber(),
+            standingOfThisHorse.getRoundReached()));
+      }
+    }
+
+    // creating the tree for the current data in the database:
+    TournamentStandingsTreeDto curTreeInDB = null;
+    if (existingStandings == true) {
+      LOG.debug("Existing standings found for this tournament");
+      curTreeInDB = tournamentMapper.tournamentDetailsDtoToTournamentStandingTree(
+          new TournamentDetailDto(
+              tournamentEntity.getId(),
+              tournamentEntity.getName(),
+              tournamentEntity.getStartDate(),
+              tournamentEntity.getEndDate(),
+              participants.toArray(new TournamentDetailParticipantDto[participants.size()])));
+      LOG.debug("This tree is currently in the database for tournament " + tournamentEntity.getId() + ": " + curTreeInDB.toStringSmaller());
+    }
+
+    // creating the tree for the new data to be saved in the database:
+    participants = new ArrayList<>();
+    for (int i = 0; i < horses.length; i++) {
+      int finalI = i;
+      List<TournamentDetailParticipantDto> horseOfNewTree =
+          Arrays.stream(tournament.participants()).filter(horse -> horse.horseId() == horses[finalI].getId()).toList();
+      Long newEntryNum;
+      Long newRoundNum;
+      if (horseOfNewTree.isEmpty()) {
+        newEntryNum = null;
+        newRoundNum = null;
+      } else {
+        newEntryNum = horseOfNewTree.getFirst().entryNumber();
+        newRoundNum = horseOfNewTree.getFirst().roundReached();
+      }
+      participants.add(new TournamentDetailParticipantDto(
+          horses[i].getId(),
+          horses[i].getName(),
+          horses[i].getDateOfBirth(),
+          newEntryNum,
+          newRoundNum));
+    }
+    TournamentStandingsTreeDto newTreeInDB = tournamentMapper.tournamentDetailsDtoToTournamentStandingTree(
+        new TournamentDetailDto(
+            tournamentEntity.getId(),
+            tournamentEntity.getName(),
+            tournamentEntity.getStartDate(),
+            tournamentEntity.getEndDate(),
+            participants.toArray(new TournamentDetailParticipantDto[participants.size()])));
+    LOG.debug("This tree will be the new tree for the tournament " + tournamentEntity.getId() + ": " + newTreeInDB.toStringSmaller());
+    if (!existingStandings) {
+      LOG.debug("Since there is no standings tree in database, the new standings tree will be kept\n" + "The new standing tree will be:\n"
+          + newTreeInDB.toStringSmaller());
+    } else {
+      LOG.debug("The new standingsTree will now be compared with the standingsTree in the database\n" + "\nThis is the new tree:\n"
+          + newTreeInDB.toStringSmaller() + "\nIt will be compared to the existing tree:\n" + curTreeInDB.toStringSmaller());
+      try {
+        validator.validateTreeCompability(newTreeInDB, curTreeInDB);
+      } catch (ValidationException e) {
+        throw new ConflictException("The new standings tree is not compatible with the old one",
+            Collections.singletonList(e.getMessage()));
+      }
+    }
+    for (int i = 0; i < participants.size(); i++) {
+      horseMappedToTournamentDao.update(participants.get(i), tournament.id());
+    }
+    return tournament;
   }
 }

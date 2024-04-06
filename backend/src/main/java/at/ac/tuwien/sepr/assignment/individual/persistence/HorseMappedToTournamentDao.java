@@ -1,5 +1,6 @@
 package at.ac.tuwien.sepr.assignment.individual.persistence;
 
+import at.ac.tuwien.sepr.assignment.individual.dto.TournamentDetailParticipantDto;
 import at.ac.tuwien.sepr.assignment.individual.entity.Standing;
 import at.ac.tuwien.sepr.assignment.individual.exception.ConflictException;
 import at.ac.tuwien.sepr.assignment.individual.exception.NotFoundException;
@@ -47,4 +48,24 @@ public interface HorseMappedToTournamentDao {
    * @throws ConflictException if there already exists a mapping for this horse and tournament
    */
   Standing add(long horseId, long tournamentId) throws ConflictException;
+
+  /**
+   * Updates the horse mapped to the tournament in the persistent data storage.
+   *
+   * @param horseTournamentDetails the details of the horse related to the tournament
+   * @param tournamentId the identifier of the tournament
+   * @return the new Standing for the horse in this tournament.
+   * @throws NotFoundException if this horse to tournament mapping doesn't exist
+   */
+  Standing update(TournamentDetailParticipantDto horseTournamentDetails, long tournamentId) throws NotFoundException;
+
+  /**
+   * Retrieves the Standing of the horse with the id horseId which takes part in this tournament with the id tournamentId
+   *
+   * @param horseId the id of the horse
+   * @param tournamentId the id of the tournament
+   * @return the Standing for this horse in this tournament
+   * @throws NotFoundException if there was no Standing found for this horse in this tournament
+   */
+  Standing getSingleMapping(long horseId, long tournamentId) throws NotFoundException;
 }

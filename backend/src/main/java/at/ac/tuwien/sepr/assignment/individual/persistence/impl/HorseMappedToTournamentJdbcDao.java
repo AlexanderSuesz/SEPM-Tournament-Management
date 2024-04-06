@@ -1,5 +1,6 @@
 package at.ac.tuwien.sepr.assignment.individual.persistence.impl;
 
+import at.ac.tuwien.sepr.assignment.individual.dto.TournamentDetailParticipantDto;
 import at.ac.tuwien.sepr.assignment.individual.entity.Standing;
 import at.ac.tuwien.sepr.assignment.individual.exception.ConflictException;
 import at.ac.tuwien.sepr.assignment.individual.exception.FatalException;
@@ -7,6 +8,7 @@ import at.ac.tuwien.sepr.assignment.individual.exception.NotFoundException;
 import at.ac.tuwien.sepr.assignment.individual.persistence.HorseMappedToTournamentDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -32,6 +34,10 @@ public class HorseMappedToTournamentJdbcDao implements HorseMappedToTournamentDa
       + TABLE_NAME
       + " WHERE tournament_id = ?";
 
+  private static final String SQL_SELECT_SINGLE_MAPPING = "SELECT * FROM "
+      + TABLE_NAME
+      + " WHERE horse_id = ? AND tournament_id = ?";
+
   private static final String SQL_CHECK_IF_ENTRY_ALREADY_EXISTS = "SELECT COUNT(*) FROM " // should return 1 if the entry already exists and 0 if it doesn't
       + TABLE_NAME
       + " WHERE horse_id = ? AND tournament_id = ?";
@@ -39,6 +45,11 @@ public class HorseMappedToTournamentJdbcDao implements HorseMappedToTournamentDa
   private static final String SQL_INSERT_WITHOUT_STANDING = "INSERT INTO "
       + TABLE_NAME
       + "  (tournament_id, horse_id) VALUES (?, ?)";
+
+  private static final String SQL_UPDATE_ENTRY_AND_ROUND_NUMBER = "UPDATE " + TABLE_NAME
+      + " SET entry_number = ?,"
+      + " round_reached = ?"
+      + " WHERE horse_id = ? AND tournament_id = ?";
 
   private final JdbcTemplate jdbcTemplate;
 
@@ -119,6 +130,50 @@ public class HorseMappedToTournamentJdbcDao implements HorseMappedToTournamentDa
         .setTournamentId(tournamentId)
         .setRoundReached(null)
         .setEntryNumber(null);
+  }
+
+  @Override
+  public Standing update(TournamentDetailParticipantDto horse, long tournamentId) throws NotFoundException {
+    LOG.trace("update({}, {})", horse, tournamentId);
+    int updated;
+    try {
+      updated = jdbcTemplate.update(SQL_UPDATE_ENTRY_AND_ROUND_NUMBER,
+          horse.entryNumber(),
+          horse.roundReached(),
+          horse.horseId(),
+          tournamentId);
+    } catch (DataAccessException e) {
+      // This should never happen - the execution of the SQL query caused an exception!!
+      throw new FatalException("Couldn't update the tournament standings", e);
+    }
+    if (updated <= 0) {
+      LOG.debug("There was no horse to tournament mapping found for the horse " + horse + " and the tournament " + tournamentId);
+      throw new NotFoundException("Couldn't update the tournament standing, because it does not exist");
+    }
+    try {
+      return getSingleMapping(horse.horseId(), tournamentId);
+    } catch (NotFoundException e) {
+      throw new FatalException("The standing for the horse " + horse.name() + " was updated for the tournament but it wasn't found in the database", e);
+    }
+  }
+
+  @Override
+  public Standing getSingleMapping(long horseId, long tournamentId) throws NotFoundException {
+    LOG.trace("getSingleMapping({}, {})", horseId, tournamentId);
+    List<Standing> standing;
+    try {
+      standing = jdbcTemplate.query(SQL_SELECT_SINGLE_MAPPING, this::mapRow, horseId, tournamentId);
+    } catch (DataAccessException e) {
+      // This should never happen - the execution of the SQL query caused an exception!!
+      throw new FatalException("Failed to retrieve standing for a horse in this tournament", e);
+    }
+    if (standing.isEmpty()) {
+      throw new NotFoundException("This horse doesn't take part in in this tournament");
+    }
+    if (standing.size() > 1) {
+      throw new FatalException("More than one standing for the same horse found");
+    }
+    return standing.getFirst();
   }
 
   /**
