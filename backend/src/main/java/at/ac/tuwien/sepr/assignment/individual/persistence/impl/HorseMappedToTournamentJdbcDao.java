@@ -62,17 +62,18 @@ public class HorseMappedToTournamentJdbcDao implements HorseMappedToTournamentDa
     LOG.trace("countTournamentsForHorse({})", horseId);
     try {
       return jdbcTemplate.queryForObject(SQL_COUNT_TOURNAMENTS_FOR_HORSE, Long.class, horseId);
-    } catch (Exception e) {
+    } catch (DataAccessException e) {
       // This should never happen - the execution of the SQL query caused an exception!!
       throw new FatalException("Failed to count tournaments for horse", e);
     }
   }
 
+  @Override
   public int countOccurrenceOfEntry(long horseId, long tournamentId) {
     LOG.trace("countOccurrenceOfEntry({}, {})", horseId, tournamentId);
     try {
       return jdbcTemplate.queryForObject(SQL_CHECK_IF_ENTRY_ALREADY_EXISTS, Integer.class, horseId, tournamentId);
-    } catch (Exception e) {
+    } catch (DataAccessException e) {
       // This should never happen - the execution of the SQL query caused an exception!!
       throw new FatalException("Failed to count occurrence of new horse to tournament mapping in database", e);
     }
@@ -84,7 +85,7 @@ public class HorseMappedToTournamentJdbcDao implements HorseMappedToTournamentDa
     List<Standing> standings;
     try {
       standings = jdbcTemplate.query(SQL_SELECT_BY_TOURNAMENTID, this::mapRow, tournamentId);
-    } catch (Exception e) {
+    } catch (DataAccessException e) {
       // This should never happen - the execution of the SQL query caused an exception!!
       throw new FatalException("Failed to retrieve standings for the horses in this tournament", e);
     }
@@ -98,12 +99,7 @@ public class HorseMappedToTournamentJdbcDao implements HorseMappedToTournamentDa
   public Standing add(long horseId, long tournamentId) throws ConflictException {
     LOG.trace("add({}, {})", horseId, tournamentId);
     int elementOccurrenceCount; // Will be 0 if element isn't present in the database
-    try {
-      elementOccurrenceCount = countOccurrenceOfEntry(horseId, tournamentId);
-    } catch (Exception e) {
-      // This should never happen - the execution of the SQL query caused an exception!!
-      throw new FatalException("Failed to count occurrence of new horse to tournament mapping in database", e);
-    }
+    elementOccurrenceCount = countOccurrenceOfEntry(horseId, tournamentId);
     LOG.debug("Adding the new entry ({}, {}) to the standings. Their current occurrence count in the database: {}",
         horseId, tournamentId, elementOccurrenceCount);
     if (elementOccurrenceCount > 0) {
@@ -113,7 +109,7 @@ public class HorseMappedToTournamentJdbcDao implements HorseMappedToTournamentDa
     int addedCount;
     try {
       addedCount = jdbcTemplate.update(SQL_INSERT_WITHOUT_STANDING, tournamentId, horseId);
-    } catch (Exception e) {
+    } catch (DataAccessException e) {
       // This should never happen - the execution of the SQL query caused an exception!!
       throw new FatalException("Failed to add mapping of new horse to tournament to the database", e);
     }
