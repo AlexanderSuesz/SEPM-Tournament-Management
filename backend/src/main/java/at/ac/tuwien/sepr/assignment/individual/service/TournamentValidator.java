@@ -212,6 +212,7 @@ public class TournamentValidator {
    * Checks if the current tree curTree compatible is with the new tree structure newTree
    */
   public void validateTreeCompability(TournamentStandingsTreeDto newTree, TournamentStandingsTreeDto curTree) throws ValidationException {
+    LOG.trace("validateTreeCompability({}, {})", newTree, curTree);
     List<String> validationErrors = new ArrayList<>();
     validationErrors.addAll(treeNodeComperator(newTree, curTree));
     if (!validationErrors.isEmpty()) {
