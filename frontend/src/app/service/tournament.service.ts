@@ -7,7 +7,7 @@ import {
   TournamentCreateDto, TournamentDetailDto, TournamentDetailParticipantDto,
   TournamentListDto,
   TournamentSearchParams,
-  TournamentStandingsDto, TournamentStandingsTreeDto
+  TournamentStandingsDto, TournamentStandingsTreeDto, TournamentUpdateDto
 } from "../dto/tournament";
 
 
@@ -35,10 +35,10 @@ export class TournamentService {
     );
   }
 
-  public updateTournamentStandings(tournamentDetails: TournamentDetailDto): Observable<TournamentDetailDto> {
+  public updateTournamentStandings(tournamentUpdateInfo: TournamentUpdateDto): Observable<TournamentDetailDto> {
     return this.http.put<TournamentDetailDto>(
-      `${baseUri}/standings/${tournamentDetails.id}`,
-      tournamentDetails
+      `${baseUri}/standings/${tournamentUpdateInfo.id}`,
+      tournamentUpdateInfo
     );
   }
 

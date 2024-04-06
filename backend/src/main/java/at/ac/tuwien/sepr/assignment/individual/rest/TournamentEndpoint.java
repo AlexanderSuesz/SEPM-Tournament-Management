@@ -4,6 +4,7 @@ import at.ac.tuwien.sepr.assignment.individual.dto.TournamentCreateDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentDetailDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentListDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentSearchDto;
+import at.ac.tuwien.sepr.assignment.individual.dto.TournamentUpdateDto;
 import at.ac.tuwien.sepr.assignment.individual.exception.ConflictException;
 import at.ac.tuwien.sepr.assignment.individual.exception.FatalException;
 import at.ac.tuwien.sepr.assignment.individual.exception.NotFoundException;
@@ -87,22 +88,21 @@ public class TournamentEndpoint {
   /**
    * Handles HTTP PUT requests to update details of a specific tournament.
    *
-   * @param tournamentDetails the new details of the tournament which should replace the old details
+   * @param tournamentUpdateDto the new data of the tournament which should replace the old data
    * @return a TournamentDetailDto representing the current details of the tournament
    * @throws NotFoundException if the tournament is not found
    * @throws ConflictException if provided details aren't compatible with current data in persistence storage (e.g. unexpected entry number for a horse)
    */
   @PutMapping("/standings/{id}")
-  public TournamentDetailDto updateTournamentStandings(@RequestBody TournamentDetailDto tournamentDetails) throws ValidationException, NotFoundException,
+  public TournamentDetailDto updateTournamentStandings(@RequestBody TournamentUpdateDto tournamentUpdateDto) throws ValidationException, NotFoundException,
       ConflictException {
-    LOG.info("PUT " + BASE_PATH + "/standings/{}", tournamentDetails.id());
-    LOG.debug("Body of request: [{}, {}, {}, {}, {}]", tournamentDetails.id(), tournamentDetails.name(), tournamentDetails.startDate(),
-        tournamentDetails.endDate(), tournamentDetails.participants());
+    LOG.info("PUT " + BASE_PATH + "/standings/{}", tournamentUpdateDto.id());
+    LOG.debug("Body of request: [{}, {}, {}, {}, {}]", tournamentUpdateDto.id(), tournamentUpdateDto.participants());
     try {
-      return service.updateTournament(tournamentDetails);
+      return service.updateTournament(tournamentUpdateDto);
     } catch (NotFoundException e) {
       HttpStatus status = HttpStatus.NOT_FOUND;
-      logClientError(status, "No tournament with the id " + tournamentDetails.id() + " found in the database", e);
+      logClientError(status, "No tournament with the id " + tournamentUpdateDto.id() + " found in the database", e);
       throw new ResponseStatusException(status, e.getMessage(), e);
     } catch (ConflictException e) {
       HttpStatus status = HttpStatus.CONFLICT;
@@ -111,7 +111,7 @@ public class TournamentEndpoint {
       throw new ResponseStatusException(status, e.getMessage(), e);
     } catch (FatalException e) {
       HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-      logClientError(status, "There was an error when updating the tournament with the new data (" + tournamentDetails + ")", e);
+      logClientError(status, "There was an error when updating the tournament with the new data (" + tournamentUpdateDto + ")", e);
       throw new ResponseStatusException(status, e.getMessage(), e);
     }
   }

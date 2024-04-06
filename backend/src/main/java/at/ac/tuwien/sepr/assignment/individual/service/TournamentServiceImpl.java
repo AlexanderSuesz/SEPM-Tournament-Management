@@ -5,6 +5,7 @@ import at.ac.tuwien.sepr.assignment.individual.dto.TournamentDetailDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentDetailParticipantDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentListDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentSearchDto;
+import at.ac.tuwien.sepr.assignment.individual.dto.TournamentUpdateDto;
 import at.ac.tuwien.sepr.assignment.individual.entity.Horse;
 import at.ac.tuwien.sepr.assignment.individual.entity.Standing;
 import at.ac.tuwien.sepr.assignment.individual.entity.Tournament;
@@ -115,8 +116,9 @@ public class TournamentServiceImpl implements TournamentService {
   }
 
   @Override
-  public TournamentDetailDto updateTournament(TournamentDetailDto tournament) throws ValidationException, NotFoundException, ConflictException {
-    LOG.trace("updateTournament({})", tournament);
+  public TournamentDetailDto updateTournament(TournamentUpdateDto tournamentUpdateDto) throws ValidationException, NotFoundException, ConflictException {
+    LOG.trace("updateTournament({})", tournamentUpdateDto);
+    TournamentDetailDto tournament = mapper.updateDtoToDetailDto(tournamentUpdateDto); // converts to this other dto to be able to reuse already existing code
     validator.validateForUpdate(tournament);
     final Tournament tournamentEntity = tournamentDao.getTournamentDetailsById(tournament.id()); // checks if the tournament doesn't exist (NotFoundException)
     LOG.debug("The provided tournament exists");
@@ -129,7 +131,7 @@ public class TournamentServiceImpl implements TournamentService {
         horses[i] = horse;
       } catch (NotFoundException e) {
         LOG.debug("horse {} not found", tournament.participants()[i].horseId());
-        throw new ConflictException("Couldn't find horse " + tournament.participants()[i].name() + " because this horse doesn't exist",
+        throw new ConflictException("Couldn't find a horse because this horse doesn't exist",
             Collections.singletonList(e.getMessage()));
       }
     }

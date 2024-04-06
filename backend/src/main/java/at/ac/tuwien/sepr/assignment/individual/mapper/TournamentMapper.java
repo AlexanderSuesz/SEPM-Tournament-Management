@@ -3,6 +3,7 @@ package at.ac.tuwien.sepr.assignment.individual.mapper;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentDetailDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentDetailParticipantDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentListDto;
+import at.ac.tuwien.sepr.assignment.individual.dto.TournamentUpdateDto;
 import at.ac.tuwien.sepr.assignment.individual.entity.Horse;
 import at.ac.tuwien.sepr.assignment.individual.entity.Tournament;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentStandingsTreeDto;
@@ -75,6 +76,36 @@ public class TournamentMapper {
         tournament.getStartDate(),
         tournament.getEndDate(),
         participants
+    );
+  }
+
+  /**
+   * Converts a TournamentUpdateDto to a TournamentDetailDto and thereby sets every unknown data to null.
+   *
+   * @param tournamentUpdateDto the TournamentUpdateDto to be converted
+   * @return the converted TournamentDetailDto
+   */
+  public TournamentDetailDto updateDtoToDetailDto(TournamentUpdateDto tournamentUpdateDto) {
+    LOG.trace("updateDtoToDetailDto({})", tournamentUpdateDto);
+    if (tournamentUpdateDto == null || tournamentUpdateDto.participants() == null) {
+      return null;
+    }
+    TournamentDetailParticipantDto[] participantDetails = new TournamentDetailParticipantDto[tournamentUpdateDto.participants().length];
+    for (int i = 0; i < tournamentUpdateDto.participants().length; i++) {
+      participantDetails[i] = new TournamentDetailParticipantDto(
+          tournamentUpdateDto.participants()[i].horseId(),
+          null,
+          null,
+          tournamentUpdateDto.participants()[i].entryNumber(),
+          tournamentUpdateDto.participants()[i].roundReached()
+      );
+    }
+    return new TournamentDetailDto(
+        tournamentUpdateDto.id(),
+        null,
+        null,
+        null,
+        participantDetails
     );
   }
 

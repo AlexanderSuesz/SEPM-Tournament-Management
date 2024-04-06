@@ -4,6 +4,7 @@ import at.ac.tuwien.sepr.assignment.individual.dto.TournamentCreateDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentDetailDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentListDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentSearchDto;
+import at.ac.tuwien.sepr.assignment.individual.dto.TournamentUpdateDto;
 import at.ac.tuwien.sepr.assignment.individual.exception.ConflictException;
 import at.ac.tuwien.sepr.assignment.individual.exception.NotFoundException;
 import at.ac.tuwien.sepr.assignment.individual.exception.ValidationException;
@@ -46,10 +47,10 @@ public interface TournamentService {
   /**
    * Updates an already existing tournament with the given tournament details.
    *
-   * @param tournament the new details of the tournament which should replace the old details of the tournament
+   * @param tournament the new data of the tournament which should replace the old data of the tournament
    * @return returns the current details of the tournament
    * @throws NotFoundException if this tournament was not found
    * @throws ConflictException if horses provided in tournament details don't match with the current details of this tournament (not expected horses, etc.)
    */
-  TournamentDetailDto updateTournament(TournamentDetailDto tournament) throws ValidationException, NotFoundException, ConflictException;
+  TournamentDetailDto updateTournament(TournamentUpdateDto tournament) throws ValidationException, NotFoundException, ConflictException;
 }

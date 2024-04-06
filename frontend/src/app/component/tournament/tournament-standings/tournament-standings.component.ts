@@ -3,7 +3,7 @@ import {
   TournamentDetailDto,
   TournamentDetailParticipantDto,
   TournamentStandingsDto,
-  TournamentStandingsTreeDto
+  TournamentStandingsTreeDto, TournamentUpdateDto, TournamentUpdateParticipantDto
 } from "../../../dto/tournament";
 import {TournamentService} from "../../../service/tournament.service";
 import {ActivatedRoute} from "@angular/router";
@@ -65,14 +65,20 @@ export class TournamentStandingsComponent implements OnInit {
       console.log('is form valid?', form.valid);
       if (form.valid) {
         let observable: Observable<TournamentDetailDto>;
-        let tournamentDetail: TournamentDetailDto = {
+        // converts this detailed dto to a less detailed dto to only submit truly necessary data.
+        let  tournamentUpdateParticipantDto: TournamentUpdateParticipantDto[] = [];
+        this.getParticipantsDetailDto().forEach(p=>
+          tournamentUpdateParticipantDto.push({
+            horseId: p.horseId,
+            entryNumber: p.entryNumber,
+            roundReached: p.roundReached
+          })
+        )
+        let tournamentUpdateInfo: TournamentUpdateDto = {
           id: this.standings.id,
-          name: this.standings.name,
-          startDate: this.startDate,
-          endDate: this.endDate,
-          participants: this.getParticipantsDetailDto()
+          participants: tournamentUpdateParticipantDto
         }
-        observable = this.service.updateTournamentStandings(tournamentDetail);
+        observable = this.service.updateTournamentStandings(tournamentUpdateInfo);
         observable.subscribe({
           next: data => {
             this.notification.success(`Tournament ${this.standings.name} successfully updated.`);

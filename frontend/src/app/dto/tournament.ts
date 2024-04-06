@@ -37,6 +37,17 @@ export interface TournamentDetailParticipantDto {
   roundReached?: number;
 }
 
+export interface TournamentUpdateDto {
+  id: number;
+  participants: TournamentUpdateParticipantDto[];
+}
+
+export interface TournamentUpdateParticipantDto {
+  horseId: number;
+  entryNumber?: number;
+  roundReached?: number;
+}
+
 export interface TournamentStandingsTreeDto {
   thisParticipant: TournamentDetailParticipantDto | null;
   branches?: TournamentStandingsTreeDto[];

@@ -110,8 +110,6 @@ public class TournamentValidator {
   public void validateForUpdate(TournamentDetailDto tournament) throws ValidationException {
     LOG.trace("validateForUpdate({})", tournament);
     List<String> validationErrors = new ArrayList<>();
-    validationErrors.addAll(validateName(tournament.name()));
-    validationErrors.addAll(validateDates(tournament.startDate(), tournament.endDate()));
     if (tournament.participants() == null || tournament.participants().length > 8) {
       validationErrors.add("A tournament can only have between 0 and 8 horses currently competing against each other");
     }
@@ -127,7 +125,7 @@ public class TournamentValidator {
           validationErrors.add("A horse containing no data was provided");
         } else {
           if (horsesIdComparison.contains(tournament.participants()[i].horseId())) {
-            validationErrors.add("The same horse " + tournament.participants()[i].name() + " appears multiple times in this tournament");
+            validationErrors.add("The same horse appears multiple times in this tournament");
           }
           if (tournament.participants()[i].entryNumber() != null && (tournament.participants()[i].entryNumber() < 0
               || tournament.participants()[i].entryNumber() > 7)) {
@@ -226,17 +224,6 @@ public class TournamentValidator {
     if (curTreeNode.getBranches() == null) {
       return validationErrors;
     }
-    /*if (curTreeNode.getBranches().getFirst().getBranches() == null) { // At depth round 2 is our last check since we can still view the root of this tree
-      if ((curTreeNode.getThisParticipant() == null && newTreeNode.getThisParticipant() == null)
-          || (curTreeNode.getThisParticipant() != null && newTreeNode.getThisParticipant() != null
-          && curTreeNode.getThisParticipant().horseId() == newTreeNode.getThisParticipant().horseId())) {
-        return validationErrors;
-      } else {
-        LOG.debug("Check 1 failed");
-        validationErrors.add("Found an inconsistency where horses of previously completed rounds don't match the already existing standing");
-        return validationErrors;
-      }
-    }*/
     if (curTreeNode.getThisParticipant() != null) {
       TournamentDetailParticipantDto childOfLeftBranchNew = newTreeNode.getBranches().getFirst().getThisParticipant();
       TournamentDetailParticipantDto childOfRightBranchNew = newTreeNode.getBranches().getLast().getThisParticipant();
