@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {Component, EventEmitter, Input, Output, OnInit} from '@angular/core';
 import {TournamentDetailParticipantDto, TournamentStandingsTreeDto} from "../../../../dto/tournament";
 import {of} from "rxjs";
 import {formatIsoDate} from "../../../../util/date-helper";
@@ -14,7 +14,7 @@ enum TournamentBranchPosition {
   templateUrl: './tournament-standings-branch.component.html',
   styleUrls: ['./tournament-standings-branch.component.scss']
 })
-export class TournamentStandingsBranchComponent {
+export class TournamentStandingsBranchComponent implements OnInit{
 
   protected readonly TournamentBranchPosition = TournamentBranchPosition;
   @Input() branchPosition = TournamentBranchPosition.FINAL_WINNER;
@@ -24,16 +24,18 @@ export class TournamentStandingsBranchComponent {
   // If this section of this round already has a winner then the participants of this section of this round can't be changed (the input field will be disabled)
   @Input() thisRoundAlreadyHasWinner: boolean = false;
 
+  // if this is not a leave then the childs need to be set before this node can receive a participant
+  childsAreSet: boolean = false;
+
   // if disableChildNodes is set true then the child nodes of this node will be disabled
   disableChildNodes: boolean = false;
 
   // When this node of child nodes of this node are changed then the parent will receive the tree structure of this node
   @Output() updateThisTreeBranchChangedEvent = new EventEmitter<{tree: TournamentStandingsTreeDto, pos: TournamentBranchPosition}>();
 
-  public ngOnInit() {
-    if (this.treeBranch?.thisParticipant != null) this.disableChildNodes = true;
+  public ngOnInit(): void {
+    this.updateDisabledChoices();
   }
-
 
   get isUpperHalf(): boolean {
     return this.branchPosition === TournamentBranchPosition.UPPER;
@@ -62,9 +64,9 @@ export class TournamentStandingsBranchComponent {
   };
 
   participantChanged() {
-    if (this.treeBranch?.thisParticipant != null) {
-      this.disableChildNodes = true;
-      this.updateThisTreeBranchChangedEvent.emit({tree: this.treeBranch, pos: this.branchPosition})
+    this.updateDisabledChoices();
+    if (this.treeBranch != undefined) {
+      this.updateThisTreeBranchChangedEvent.emit({tree: this.treeBranch, pos: this.branchPosition});
     }
   }
 
@@ -80,6 +82,7 @@ export class TournamentStandingsBranchComponent {
         treeBranchCopy.push(branchLower);
         this.treeBranch.branches = treeBranchCopy;
       }
+      this.updateDisabledChoices();
       this.updateThisTreeBranchChangedEvent.emit({tree: this.treeBranch, pos: this.branchPosition});
     }
   }
@@ -97,7 +100,22 @@ export class TournamentStandingsBranchComponent {
         treeBranchCopy.push(rightBranch);
         this.treeBranch.branches = treeBranchCopy;
       }
+      this.updateDisabledChoices();
       this.updateThisTreeBranchChangedEvent.emit({tree: this.treeBranch, pos: this.branchPosition});
+    }
+  }
+
+  private updateDisabledChoices() {
+    if (this.treeBranch?.thisParticipant != null) this.disableChildNodes = true;
+    else this.disableChildNodes = false;
+    if (this.treeBranch?.branches == undefined) {
+      this.childsAreSet = true; // since a leave doesn't have child nodes, we can set this check to true (this check is only for nodes with childs)
+    } else {
+      if (this.treeBranch.branches.filter(participant => participant.thisParticipant != null).length == 2) {
+        this.childsAreSet = true;
+      } else {
+        this.childsAreSet = false;
+      }
     }
   }
 

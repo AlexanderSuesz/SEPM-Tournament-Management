@@ -165,13 +165,16 @@ export class TournamentStandingsComponent implements OnInit {
   private generateStandingsTree(participants: TournamentDetailParticipantDto[]): TournamentStandingsTreeDto {
     let orderedParticipants: TournamentDetailParticipantDto[] = [];
     let wantedEntryNumber: number = 0;
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 8; i++) {
       participants.forEach(participant => {
-        if (participant.entryNumber != undefined && participant.entryNumber == wantedEntryNumber) orderedParticipants.push(participant);
-        wantedEntryNumber++;
-      })
+        if (participant.entryNumber != undefined && participant.entryNumber == wantedEntryNumber) {
+          orderedParticipants.push(participant);
+        };
+      });
+      wantedEntryNumber++;
     }
-    const root: TournamentStandingsTreeDto = this.treeGenerationHelper(4, orderedParticipants);
+    orderedParticipants.forEach(participant => console.log(participant))
+    const root: TournamentStandingsTreeDto = this.treeGenerationHelper(4, 0, 7,orderedParticipants);
     return root;
   }
 
@@ -182,30 +185,34 @@ export class TournamentStandingsComponent implements OnInit {
    * @param participants all participants of the current segment
    * @private the fully built tree structure for the current root element
    */
-  private treeGenerationHelper(curRound: number, participants: TournamentDetailParticipantDto[]): TournamentStandingsTreeDto {
+  private treeGenerationHelper(curRound: number, lowerBound: number, upperBound: number, participants: TournamentDetailParticipantDto[]): TournamentStandingsTreeDto {
     if (curRound <= 1) {
       // if we are in a leaf we just return a leaf node with no further nodes
       if (participants.length == 0) {
         return {thisParticipant: null, branches: undefined};
       } else {
-        // @ts-ignore
-        return {thisParticipant: participants.pop(), branches: undefined};
+        let returnValue: TournamentDetailParticipantDto | undefined = participants.pop();
+        if (returnValue != undefined) {
+          return {thisParticipant: returnValue, branches: undefined};
+        } else {
+          return {thisParticipant: null, branches: undefined};
+        }
       }
     }
-    let numberOfParticipantsInThisSegment: number = 2 ** (curRound -1);
+    const splitPoint = Math.floor((upperBound - lowerBound) / 2) + lowerBound;
     let upperParticipants: TournamentDetailParticipantDto[] = [];
     let lowerParticipants: TournamentDetailParticipantDto[] = [];
     let winner: TournamentDetailParticipantDto | null = null; // winner is by default null
-    participants.forEach(participant =>
+    participants.slice().forEach(participant =>
     {
-      if (participant.roundReached == curRound) winner = participant;
+      if (participant.roundReached != undefined && participant.roundReached >= curRound) winner = participant;
       if (participant.entryNumber != undefined) {
-        if (participant.entryNumber < numberOfParticipantsInThisSegment / 2) upperParticipants.push(participant);
-        else lowerParticipants.push(participant);
+        if (participant.entryNumber >= 0 && participant.entryNumber <= splitPoint) upperParticipants.push(participant);
+      else if (participant.entryNumber > splitPoint && participant.entryNumber <= upperBound) lowerParticipants.push(participant);
       }
     });
     return {thisParticipant: winner, branches:
-        [this.treeGenerationHelper(curRound - 1, upperParticipants), this.treeGenerationHelper(curRound - 1, lowerParticipants)]};
+        [this.treeGenerationHelper(curRound - 1, lowerBound, splitPoint, upperParticipants), this.treeGenerationHelper(curRound - 1, splitPoint + 1, upperBound, lowerParticipants)]};
   }
 
   private displayErrorMessageOnScreen(error: any): void {

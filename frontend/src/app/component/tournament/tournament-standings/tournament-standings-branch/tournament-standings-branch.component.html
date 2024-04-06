@@ -42,6 +42,6 @@
     [(ngModel)]="treeBranch.thisParticipant"
     [formatModel]="formatParticipant"
     (ngModelChange)="participantChanged()"
-    [disabled]="thisRoundAlreadyHasWinner"
+    [disabled]="!childsAreSet || thisRoundAlreadyHasWinner"
     ></app-autocomplete>
 </div>

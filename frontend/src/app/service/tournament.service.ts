@@ -35,7 +35,18 @@ export class TournamentService {
     );
   }
 
-  search(searchParams: TournamentSearchParams): Observable<TournamentListDto[]> {
+  public updateTournamentStandings(tournamentDetails: TournamentDetailDto): Observable<TournamentDetailDto> {
+    return this.http.put<TournamentDetailDto>(
+      `${baseUri}/standings/${tournamentDetails.id}`,
+      tournamentDetails
+    );
+  }
+
+  public getTournamentDetailsById(id: number): Observable<TournamentDetailDto> {
+    return this.http.get<TournamentDetailDto>(`${baseUri}/standings/${id}`)
+  }
+
+  public search(searchParams: TournamentSearchParams): Observable<TournamentListDto[]> {
     if (searchParams.name === '') {
       delete searchParams.name;
     }
