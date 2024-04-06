@@ -137,7 +137,7 @@ public class HorseValidator {
       validationErrors.add("Name of the horse breed is too short");
     }
     if (!breed.matches("^[0-9a-zA-Z _]+")) {
-      validationErrors.add("The breed name can only consist of numbers, letters and the special characters {' ', '_'}");
+      validationErrors.add("The breed name can only consist of numbers, letters and the special characters space and underscore");
     }
     return validationErrors;
   }
@@ -153,7 +153,7 @@ public class HorseValidator {
       validationErrors.add("Horse name is too long");
     }
     if (!name.matches("^[0-9a-zA-Z _]+")) {
-      validationErrors.add("The horse name can only consist of numbers, letters and the special characters {' ', '_'}");
+      validationErrors.add("The horse name can only consist of numbers, letters and the special characters space and underscore");
     }
     return validationErrors;
   }
