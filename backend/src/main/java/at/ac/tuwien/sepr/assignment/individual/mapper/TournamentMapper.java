@@ -2,6 +2,7 @@ package at.ac.tuwien.sepr.assignment.individual.mapper;
 
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentDetailDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentDetailParticipantDto;
+import at.ac.tuwien.sepr.assignment.individual.dto.TournamentDetailsParticipantsWithPointsDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentListDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentUpdateDto;
 import at.ac.tuwien.sepr.assignment.individual.entity.Horse;
@@ -70,6 +71,41 @@ public class TournamentMapper {
       );
     }
 
+    return new TournamentDetailDto(
+        tournament.getId(),
+        tournament.getName(),
+        tournament.getStartDate(),
+        tournament.getEndDate(),
+        participants
+    );
+  }
+
+  /**
+   * Creates a TournamentDetailDto from a Tournament object and a TournamentDetailsParticipantsWithPointsDto Array.
+   *
+   * @param tournament the tournament for which the TournamentDetailDto should be created
+   * @param horsesWithScores the horses which will be added as participants to the TournamentDetailDto
+   * @return TournamentDetailDto the detailed description of this tournament
+   */
+  public TournamentDetailDto participantsWithPointsDtoToDetailDto(Tournament tournament,
+                                                                  ArrayList<TournamentDetailsParticipantsWithPointsDto> horsesWithScores) {
+    LOG.trace("participantsWithPointsDtoToDetailDto({}, {})", tournament, horsesWithScores);
+    if (tournament == null || horsesWithScores == null) {
+      return null;
+    }
+    TournamentDetailParticipantDto[] participants = new TournamentDetailParticipantDto[horsesWithScores.size()];
+    for (int i = 0; i < horsesWithScores.size(); i++) {
+      if (horsesWithScores.get(i) == null) {
+        return null;
+      }
+      participants[i] = new TournamentDetailParticipantDto(
+          horsesWithScores.get(i).getHorseId(),
+          horsesWithScores.get(i).getName(),
+          horsesWithScores.get(i).getDateOfBirth(),
+          horsesWithScores.get(i).getEntryNumber(),
+          horsesWithScores.get(i).getRoundReached()
+      );
+    }
     return new TournamentDetailDto(
         tournament.getId(),
         tournament.getName(),
