@@ -38,7 +38,7 @@ public class HorseValidator {
     if (horse.breed() != null) {
       validationErrors.addAll(validateBreed(horse.breed().name()));
     }
-    validationErrors.addAll(validateName(horse.name()));
+    validationErrors.addAll(validateNameWithRegex(horse.name()));
     validationErrors.addAll(validateSex(horse.sex()));
     validationErrors.addAll(validateHeight(horse.height()));
     validationErrors.addAll(validateWeight(horse.weight()));
@@ -60,7 +60,7 @@ public class HorseValidator {
     if (horse.breed() != null) {
       validationErrors.addAll(validateBreed(horse.breed().name()));
     }
-    validationErrors.addAll(validateName(horse.name()));
+    validationErrors.addAll(validateNameWithRegex(horse.name()));
     validationErrors.addAll(validateSex(horse.sex()));
     validationErrors.addAll(validateHeight(horse.height()));
     validationErrors.addAll(validateWeight(horse.weight()));
@@ -86,7 +86,7 @@ public class HorseValidator {
       validationErrors.add("Earliest date of birth needs to be before latest date of birth");
     }
     if (searchParameters.name() != null) {
-      validationErrors.addAll(validateName(searchParameters.name()));
+      validationErrors.addAll(validateNameWithoutRegex(searchParameters.name()));
     }
     if (!validationErrors.isEmpty()) {
       throw new ValidationException("Validation of the search parameters failed", validationErrors);
@@ -103,7 +103,7 @@ public class HorseValidator {
   public void validateForCompatibilityWithTournament(HorseSelectionDto horse, LocalDate startDateOfTournament) throws ValidationException {
     LOG.trace("validateForCompatibilityWithTournament({}, {})", horse, startDateOfTournament);
     List<String> validationErrors = new ArrayList<>();
-    validationErrors.addAll(validateName(horse.name()));
+    validationErrors.addAll(validateNameWithRegex(horse.name()));
     boolean tournamentDateIsNull = false;
     boolean horseDateIsNull = false;
     if (startDateOfTournament == null) {
@@ -142,7 +142,31 @@ public class HorseValidator {
     return validationErrors;
   }
 
-  private List<String> validateName(String name) {
+  /**
+   * Validates the name of the horse same as validateNameWithoutRegex but additionally checks the string content for special characters.
+   *
+   * @param name the name of the horse
+   * @return all validation errors which occurred
+   */
+  private List<String> validateNameWithRegex(String name) {
+    List<String> validationErrors = new ArrayList<>();
+    validationErrors.addAll(validateNameWithoutRegex(name));
+    if (name != null && !name.matches("^[0-9a-zA-Z _]+")) {
+      LOG.debug("The input {" + name + "} is not valid input for a name!");
+      validationErrors.add("The horse name can only consist of numbers, letters and the special characters space and underscore");
+    }
+    return validationErrors;
+  }
+
+  /**
+   * Validates the name of the horse without checking the string content for special characters.
+   * Mainly using this validation method when searching for horses by their name.
+   * This is to e.g. not constantly throw errors for the user when a special character is typed in the search bar.
+   *
+   * @param name the name of the horse
+   * @return all validation errors which occurred
+   */
+  private List<String> validateNameWithoutRegex(String name) {
     List<String> validationErrors = new ArrayList<>();
     if (name == null) {
       validationErrors.add("Horse name is too short"); // can't check for the rest if is null
@@ -151,9 +175,6 @@ public class HorseValidator {
       validationErrors.add("Horse name is too short");
     } else if (name.length() > 100) {
       validationErrors.add("Horse name is too long");
-    }
-    if (!name.matches("^[0-9a-zA-Z _]+")) {
-      validationErrors.add("The horse name can only consist of numbers, letters and the special characters space and underscore");
     }
     return validationErrors;
   }
