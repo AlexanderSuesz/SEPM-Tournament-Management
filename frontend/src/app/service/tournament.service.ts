@@ -46,6 +46,10 @@ export class TournamentService {
     return this.http.get<TournamentDetailDto>(`${baseUri}/standings/${id}`)
   }
 
+  public generateRound1ById(id: number):Observable<TournamentDetailDto> {
+    return this.http.get<TournamentDetailDto>(`${baseUri}/standings/generate/${id}`)
+  }
+
   public search(searchParams: TournamentSearchParams): Observable<TournamentListDto[]> {
     if (searchParams.name === '') {
       delete searchParams.name;

@@ -94,7 +94,48 @@ export class TournamentStandingsComponent implements OnInit {
   public generateFirstRound() {
     if (!this.standings)
       return;
-    // TODO implement
+    if (this.checkIfParticipantExists(this.standings.tree)) {
+      this.notification.error("Can't generate first round if participants were already set");
+    } else {
+      this.route.url.subscribe(url =>{
+        this.service.generateRound1ById(Number(url[1])).subscribe({
+          next: data => {
+            this.startDate = data.startDate;
+            this.endDate = data.endDate;
+            this.standings = {
+              id: data.id,
+              name: data.name,
+              participants: data.participants,
+              tree: this.generateStandingsTree(data.participants)
+            };
+            this.notification.success(`First round four tournament ${this.standings.name} successfully generated.`);
+          },
+          error: error => {
+            console.error('Error fetching generated horses', error);
+            this.displayErrorMessageOnScreen(error)
+          }
+        });
+      })
+
+    }
+  }
+
+  private checkIfParticipantExists(treeNode: TournamentStandingsTreeDto): boolean {
+    if (treeNode.branches == undefined) { // checks leave node
+      return treeNode.thisParticipant != null; // returns true if a participant exists in this node
+    }
+    if (treeNode.thisParticipant != null) return true; // if a participant was already found, then the tree won't be searched further
+    let treeNodeCopy: TournamentStandingsTreeDto[] = treeNode.branches.slice();
+    let leftChild: TournamentStandingsTreeDto | undefined = treeNodeCopy.pop();
+    let rightChild: TournamentStandingsTreeDto | undefined = treeNodeCopy.pop();
+    let participantFound = false;
+    if (leftChild != undefined) { // just because slice can provide an undefined objects
+      participantFound = this.checkIfParticipantExists(leftChild);
+    }
+    if (rightChild != undefined && !participantFound) {
+      participantFound = this.checkIfParticipantExists(rightChild);
+    }
+    return participantFound;
   }
 
   // update tree with tree received from the tree root
