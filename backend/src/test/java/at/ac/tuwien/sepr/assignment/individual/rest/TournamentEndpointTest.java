@@ -60,8 +60,8 @@ public class TournamentEndpointTest extends TestBase {
         .hasSize(10)
         .extracting(TournamentListDto::id, TournamentListDto::name, TournamentListDto::startDate, TournamentListDto::endDate)
         .contains(
-            tuple(-1L, "Noobz", LocalDate.of(2007, 8, 5), LocalDate.of(2007, 8, 10)),
-            tuple(-4L, "Heavens Match", LocalDate.of(2010, 8, 5), LocalDate.of(2010, 8, 10)),
+            tuple(-1L, "Noobz", LocalDate.of(2020, 8, 5), LocalDate.of(2020, 8, 10)),
+            tuple(-4L, "Heavens Match", LocalDate.of(2021, 1, 5), LocalDate.of(2021, 2, 10)),
             tuple(-10L, "Road to 42", LocalDate.of(2016, 8, 5), LocalDate.of(2016, 8, 10)),
             tuple(-6L, "Trivial Matters", LocalDate.of(2012, 8, 5), LocalDate.of(2012, 8, 10)));
   }
@@ -83,9 +83,8 @@ public class TournamentEndpointTest extends TestBase {
     tournamentIterator.forEachRemaining(tournaments::add);
     assertThat(tournaments)
         .extracting("id", "name", "startDate", "endDate")
-        // .as("ID, Name, Start Date, End Date")
         .containsExactlyInAnyOrder(
-            tuple(-3L, "The Big Ones", LocalDate.of(2009, 8, 5), LocalDate.of(2009, 8, 10)),
+            tuple(-3L, "The Big Ones", LocalDate.of(2020, 4, 3), LocalDate.of(2020, 6, 12)),
             tuple(-9L, "The big 8", LocalDate.of(2015, 8, 5), LocalDate.of(2015, 8, 10))
         );
   }
