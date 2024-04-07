@@ -1,5 +1,6 @@
 package at.ac.tuwien.sepr.assignment.individual.service;
 
+import at.ac.tuwien.sepr.assignment.individual.dto.TournamentDetailsParticipantsWithPointsDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentCreateDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentDetailDto;
 import at.ac.tuwien.sepr.assignment.individual.dto.TournamentDetailParticipantDto;
@@ -226,5 +227,70 @@ public class TournamentServiceImpl implements TournamentService {
       horseMappedToTournamentDao.update(participants.get(i), tournament.id());
     }
     return tournament;
+  }
+
+  @Override
+  public TournamentDetailDto generateRound1ById(long id) throws NotFoundException, ConflictException {
+    Tournament tournament = tournamentDao.getTournamentDetailsById(id); // throws NotFoundException if the tournament doesn't exist
+    List<Standing> standings = horseMappedToTournamentDao.getHorsesInTournament(id); // throws NotFoundException if mappings for this tournament doesn't exist
+    for (int i = 0; i < standings.size(); i++) { // throws ConflictException if horses are already in a round
+      // tests if both entry and round number are set. If one is set, the other one should be set as well. But still tested both for good measure
+      if (standings.get(i).getEntryNumber() != null || standings.get(i).getRoundReached() != null) {
+        throw new ConflictException("Can't generate first round if horses are already placed in a round",
+            Collections.singletonList("Found horse which is already placed in a round"));
+      }
+    }
+    ArrayList<TournamentDetailsParticipantsWithPointsDto> horsesWithScores = new ArrayList<>(); // will contain the score for each horse
+    for (Standing horse : standings) {
+      List<Standing> allStandingsOfThisHorse; // contains all standings in all tournaments for a single horse
+      allStandingsOfThisHorse = horseMappedToTournamentDao.getTournamentsForHorseInTimeFrame(
+          horse.getHorseId(),
+          tournament.getStartDate().minusMonths(12),
+          tournament.getEndDate());
+      long score = 0;
+      for (int i = 0; i < allStandingsOfThisHorse.size(); i++) {
+        if (allStandingsOfThisHorse.get(i).getRoundReached() != null) {
+          switch ((int) allStandingsOfThisHorse.get(i).getRoundReached().longValue()) { // we check what round the horse reached in the current standing
+            case 2: // Points are only awarded for round 2 and above
+              score += 1;
+              break;
+            case 3:
+              score += 3;
+              break;
+            case 4:
+              score += 5;
+              break;
+            default:
+              break;
+          }
+        }
+      }
+      // need to retrieve horse because the TournamentDetailsParticipantsWithPointsDto needs these basic infos which will later be returned to the user
+      Horse horseEntity = horseDao.getById(horse.getHorseId());
+      horsesWithScores.add(
+          new TournamentDetailsParticipantsWithPointsDto(
+              horseEntity.getId(),
+              horseEntity.getName(),
+              horseEntity.getDateOfBirth(),
+              score
+          ));
+    }
+    horsesWithScores.sort((horse1, horse2) -> {
+      if (horse1.getPoints() == horse2.getPoints()) {
+        return horse1.getName().compareTo(horse2.getName());
+      } else {
+        return Double.compare(horse1.getPoints(), horse2.getPoints()) == -1 ? 1 : -1; // we want to sort in descending order starting with the largest number
+      }
+    });
+    long curEntryNumber = 0;
+    for (int i = 0; i < horsesWithScores.size() / 2; i++) {
+      horsesWithScores.get(i).setRoundReached(1L);
+      horsesWithScores.get(i).setEntryNumber(curEntryNumber++);
+      horsesWithScores.get(horsesWithScores.size() - 1 - i).setRoundReached(1L);
+      horsesWithScores.get(horsesWithScores.size() - 1 - i).setEntryNumber(curEntryNumber++);
+    }
+    LOG.debug("created matching of the horses for round 1: ");
+    horsesWithScores.stream().forEach(h -> LOG.debug(h.toString())); // for debugging purposes
+    return mapper.participantsWithPointsDtoToDetailDto(tournament, horsesWithScores);
   }
 }

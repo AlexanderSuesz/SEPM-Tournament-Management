@@ -5,6 +5,7 @@ import at.ac.tuwien.sepr.assignment.individual.entity.Standing;
 import at.ac.tuwien.sepr.assignment.individual.exception.ConflictException;
 import at.ac.tuwien.sepr.assignment.individual.exception.NotFoundException;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -68,4 +69,14 @@ public interface HorseMappedToTournamentDao {
    * @throws NotFoundException if there was no Standing found for this horse in this tournament
    */
   Standing getSingleMapping(long horseId, long tournamentId) throws NotFoundException;
+
+  /**
+   * Retrieves all Standings of a horse of each tournament it participated in which started earliest at the startDate and ended latest at the endDate
+   *
+   * @param horseId the id of the horse
+   * @param startDate the earliest tournament start date which is allowed
+   * @param endDate the latest tournament end date which is allowed
+   * @return the list of all standings of this horse in tournaments in this timeframe
+   */
+  List<Standing> getTournamentsForHorseInTimeFrame(long horseId, LocalDate startDate, LocalDate endDate);
 }

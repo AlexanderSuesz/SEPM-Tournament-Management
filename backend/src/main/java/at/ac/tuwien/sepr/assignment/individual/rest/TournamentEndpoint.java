@@ -86,6 +86,32 @@ public class TournamentEndpoint {
   }
 
   /**
+   * Handles HTTP GET requests to retrieve a generated standing for the horses for round 1 of the given tournament.
+   *
+   * @param id the id of the tournament
+   * @return the new tournament details including the generated first round standings of all horses
+   */
+  @GetMapping("/standings/generate/{id}")
+  public TournamentDetailDto generateRound1ById(@PathVariable("id") long id) {
+    LOG.info("GET " + BASE_PATH + "/standings/generate/{}", id);
+    try {
+      return service.generateRound1ById(id);
+    } catch (NotFoundException e) {
+      HttpStatus status = HttpStatus.NOT_FOUND;
+      logClientError(status, "No tournament with the id " + id + " found in the database", e);
+      throw new ResponseStatusException(status, e.getMessage(), e);
+    } catch (ConflictException e) {
+      HttpStatus status = HttpStatus.CONFLICT;
+      logClientError(status, "There was a conflict when generating the first round for the horses of the tournament " + id, e);
+      throw new ResponseStatusException(status, e.getMessage(), e);
+    } catch (FatalException e) {
+      HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+      logClientError(status, "There was an error when retrieving the data of the tournament with id " + id + " from the database", e);
+      throw new ResponseStatusException(status, e.getMessage(), e);
+    }
+  }
+
+  /**
    * Handles HTTP PUT requests to update details of a specific tournament.
    *
    * @param tournamentUpdateDto the new data of the tournament which should replace the old data

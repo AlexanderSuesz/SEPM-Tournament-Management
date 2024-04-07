@@ -15,6 +15,7 @@ import org.springframework.stereotype.Repository;
 import java.lang.invoke.MethodHandles;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 
@@ -25,28 +26,38 @@ import java.util.List;
 @Repository
 public class HorseMappedToTournamentJdbcDao implements HorseMappedToTournamentDao {
   private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-  private static final String TABLE_NAME = "horse_mapped_to_tournament";
+  private static final String HORSE_MAPPED_TO_TOURNAMENT_TABLE_NAME = "horse_mapped_to_tournament";
+  private static final String TOURNAMENT_TABLE_NAME = "tournament";
   private static final String SQL_COUNT_TOURNAMENTS_FOR_HORSE = "SELECT COUNT(*) FROM "
-      + TABLE_NAME
+      + HORSE_MAPPED_TO_TOURNAMENT_TABLE_NAME
       + " WHERE horse_id = ?";
 
   private static final String SQL_SELECT_BY_TOURNAMENTID = "SELECT * FROM "
-      + TABLE_NAME
+      + HORSE_MAPPED_TO_TOURNAMENT_TABLE_NAME
       + " WHERE tournament_id = ?";
 
   private static final String SQL_SELECT_SINGLE_MAPPING = "SELECT * FROM "
-      + TABLE_NAME
+      + HORSE_MAPPED_TO_TOURNAMENT_TABLE_NAME
       + " WHERE horse_id = ? AND tournament_id = ?";
 
+  private static final String SQL_SELECT_BY_HORSEID_AND_TIME_SPAN = "SELECT tournament_id, horse_id, entry_number, round_reached FROM "
+      + HORSE_MAPPED_TO_TOURNAMENT_TABLE_NAME
+      + " INNER JOIN "
+      + TOURNAMENT_TABLE_NAME
+      + " ON "
+      + HORSE_MAPPED_TO_TOURNAMENT_TABLE_NAME + ".tournament_id = "
+      + TOURNAMENT_TABLE_NAME + ".id"
+      + " WHERE HORSE_ID = ? AND START_DATE >= ? AND END_DATE <= ?";
+
   private static final String SQL_CHECK_IF_ENTRY_ALREADY_EXISTS = "SELECT COUNT(*) FROM " // should return 1 if the entry already exists and 0 if it doesn't
-      + TABLE_NAME
+      + HORSE_MAPPED_TO_TOURNAMENT_TABLE_NAME
       + " WHERE horse_id = ? AND tournament_id = ?";
 
   private static final String SQL_INSERT_WITHOUT_STANDING = "INSERT INTO "
-      + TABLE_NAME
+      + HORSE_MAPPED_TO_TOURNAMENT_TABLE_NAME
       + "  (tournament_id, horse_id) VALUES (?, ?)";
 
-  private static final String SQL_UPDATE_ENTRY_AND_ROUND_NUMBER = "UPDATE " + TABLE_NAME
+  private static final String SQL_UPDATE_ENTRY_AND_ROUND_NUMBER = "UPDATE " + HORSE_MAPPED_TO_TOURNAMENT_TABLE_NAME
       + " SET entry_number = ?,"
       + " round_reached = ?"
       + " WHERE horse_id = ? AND tournament_id = ?";
@@ -170,6 +181,20 @@ public class HorseMappedToTournamentJdbcDao implements HorseMappedToTournamentDa
       throw new FatalException("More than one standing for the same horse found");
     }
     return standing.getFirst();
+  }
+
+  @Override
+  public List<Standing> getTournamentsForHorseInTimeFrame(long horseId, LocalDate startDate, LocalDate endDate) {
+    LOG.trace("getTournamentsForHorseInTimeFrame({}, {}, {})", horseId, startDate, endDate);
+    List<Standing> standings;
+    try {
+      standings = jdbcTemplate.query(SQL_SELECT_BY_HORSEID_AND_TIME_SPAN, this::mapRow, horseId, startDate, endDate);
+    } catch (DataAccessException e) {
+      // This should never happen - the execution of the SQL query caused an exception!!
+      throw new FatalException("Failed to retrieve standings for the horse which takes part in tournaments in the timespan from "
+          + startDate + " to " + endDate, e);
+    }
+    return standings;
   }
 
   /**

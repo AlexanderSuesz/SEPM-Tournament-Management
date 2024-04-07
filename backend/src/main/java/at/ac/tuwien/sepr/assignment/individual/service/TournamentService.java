@@ -53,4 +53,14 @@ public interface TournamentService {
    * @throws ConflictException if horses provided in tournament details don't match with the current details of this tournament (not expected horses, etc.)
    */
   TournamentDetailDto updateTournament(TournamentUpdateDto tournament) throws ValidationException, NotFoundException, ConflictException;
+
+  /**
+   * Retrieves the details of a tournament with id where the standing of each horse was generated for round 1 based on its score the past 12 months.
+   *
+   * @param id the id of the tournament
+   * @return the generated horse standings of this tournament
+   * @throws NotFoundException if the tournament was not found
+   * @throws ConflictException if a horse is already in at least round 1
+   */
+  TournamentDetailDto generateRound1ById(long id) throws NotFoundException, ConflictException;
 }
