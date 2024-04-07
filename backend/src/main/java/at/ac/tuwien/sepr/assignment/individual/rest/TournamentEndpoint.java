@@ -116,14 +116,11 @@ public class TournamentEndpoint {
    *
    * @param tournamentUpdateDto the new data of the tournament which should replace the old data
    * @return a TournamentDetailDto representing the current details of the tournament
-   * @throws NotFoundException if the tournament is not found
-   * @throws ConflictException if provided details aren't compatible with current data in persistence storage (e.g. unexpected entry number for a horse)
    */
   @PutMapping("/standings/{id}")
-  public TournamentDetailDto updateTournamentStandings(@RequestBody TournamentUpdateDto tournamentUpdateDto) throws ValidationException, NotFoundException,
-      ConflictException {
+  public TournamentDetailDto updateTournamentStandings(@RequestBody TournamentUpdateDto tournamentUpdateDto) throws ValidationException {
     LOG.info("PUT " + BASE_PATH + "/standings/{}", tournamentUpdateDto.id());
-    LOG.debug("Body of request: [{}, {}, {}, {}, {}]", tournamentUpdateDto.id(), tournamentUpdateDto.participants());
+    LOG.debug("Body of request: [{}, {}]", tournamentUpdateDto.id(), tournamentUpdateDto.participants());
     try {
       return service.updateTournament(tournamentUpdateDto);
     } catch (NotFoundException e) {

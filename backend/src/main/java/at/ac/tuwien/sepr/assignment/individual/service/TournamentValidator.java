@@ -209,7 +209,11 @@ public class TournamentValidator {
   }
 
   /**
-   * Checks if the current tree curTree compatible is with the new tree structure newTree
+   * Checks if the current tournament standings tree curTree is compatible with the new tree structure of newTree.
+   *
+   * @param newTree the new tree which should replace the current tree in the database
+   * @param curTree the current tree to compare the newTree to (mostly just the current tree in the database)
+   * @throws ValidationException if the new tree isn't compatible with the current tree
    */
   public void validateTreeCompability(TournamentStandingsTreeDto newTree, TournamentStandingsTreeDto curTree) throws ValidationException {
     LOG.trace("validateTreeCompability({}, {})", newTree, curTree);

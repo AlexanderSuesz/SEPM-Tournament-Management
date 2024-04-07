@@ -5,6 +5,7 @@ import java.time.LocalDate;
 /**
  * DTO encompasses detailed information about a tournament and the horses taking part in it, including their standing in the tournament.
  *
+ * @param id id of the tournament
  * @param name the name of the tournament
  * @param startDate the start date of the tournament
  * @param endDate the end date of the tournament

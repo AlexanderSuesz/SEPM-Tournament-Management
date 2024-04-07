@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The standings of horses in a tournament represented as a tree structure
+ * The standings of horses in a tournament represented as a tree structure. This tree can be derived from a TournamentDetailDto.
  */
 public class TournamentStandingsTreeDto {
-  private TournamentDetailParticipantDto thisParticipant;
-  private ArrayList<TournamentStandingsTreeDto> branches;
+  private TournamentDetailParticipantDto thisParticipant; // the root participant - in the tournament one round higher than its children
+  private ArrayList<TournamentStandingsTreeDto> branches; // the child participants
 
   public TournamentStandingsTreeDto(TournamentDetailParticipantDto thisParticipant, TournamentStandingsTreeDto[] childs) {
     this.thisParticipant = thisParticipant;
